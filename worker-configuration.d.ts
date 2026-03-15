@@ -4,12 +4,13 @@
 declare namespace Cloudflare {
   interface GlobalProps {
     mainModule: typeof import("./src/index");
-    durableNamespaces: "Sandbox";
+    durableNamespaces: "Sandbox" | "OpencodeSandbox";
   }
   interface Env {
     AI: Ai;
     ASSETS: Fetcher;
     Sandbox: DurableObjectNamespace<import("./src/index").Sandbox>;
+    OpencodeSandbox: DurableObjectNamespace<import("./src/index").OpencodeSandbox>;
   }
 }
 interface Env extends Cloudflare.Env {}

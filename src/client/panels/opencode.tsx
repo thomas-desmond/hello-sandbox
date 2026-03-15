@@ -1,0 +1,131 @@
+import { motion, AnimatePresence } from 'motion/react';
+import { useState } from 'react';
+
+import { Callout } from '@/components/callout';
+import { CodeBlock } from '@/components/code-block';
+
+const SDK_CODE = `import { createOpencodeServer } from '@cloudflare/sandbox/opencode';
+
+const sandbox = getSandbox(env.OpencodeSandbox, 'opencode');
+const server = await createOpencodeServer(sandbox, {
+  directory: '/home/user/agents',
+});
+// Expose the OpenCode port on its own preview URL
+const { url } = await sandbox.exposePort(server.port, { hostname });`;
+
+const DOCKERFILE_CODE = `# Uses the official OpenCode base image — includes the OpenCode CLI out of the box
+FROM docker.io/cloudflare/sandbox:0.7.17-opencode
+EXPOSE 8080`;
+
+function ConnectingBars() {
+	return (
+		<div className="flex items-end gap-[3px]">
+			{[0, 1, 2, 3, 4].map((index) => (
+				<motion.div
+					key={index}
+					className="w-[3px] rounded-full bg-cf-orange"
+					animate={{
+						height: [8 + index * 3, 16 + index * 2, 8 + index * 3],
+						opacity: [0.3, 1, 0.3],
+					}}
+					transition={{ duration: 1, repeat: Infinity, delay: index * 0.12, ease: 'easeInOut' }}
+					style={{ height: 8 + index * 3 }}
+				/>
+			))}
+		</div>
+	);
+}
+
+export function OpencodePanel() {
+	const [iframeUrl, setIframeUrl] = useState<string | undefined>();
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | undefined>();
+
+	async function launch() {
+		setLoading(true);
+		setError(undefined);
+		try {
+			const response = await fetch('/api/opencode/start');
+			if (!response.ok) throw new Error(`Failed to start OpenCode (${response.status})`);
+			const data: { url: string } = await response.json();
+			setIframeUrl(data.url);
+		} catch (error_) {
+			setError(error_ instanceof Error ? error_.message : 'Failed to start OpenCode');
+			setLoading(false);
+		}
+	}
+
+	return (
+		<section className="flex flex-col gap-6">
+			<div>
+				<h2 className="font-sans text-2xl font-medium text-cf-text">OpenCode</h2>
+				<p className="mt-1 text-base text-cf-text-muted">
+					Run the full OpenCode web experience inside a Cloudflare Sandbox. A second container with the official <code>-opencode</code> base
+					image runs the OpenCode server, exposed via a preview URL and embedded here.
+				</p>
+			</div>
+
+			<CodeBlock code={SDK_CODE} label="WORKER CODE" />
+			<CodeBlock code={DOCKERFILE_CODE} label="DOCKERFILE" />
+
+			{iframeUrl ? (
+				<div className="flex flex-col gap-2">
+					<div className="flex items-center justify-between">
+						<button onClick={() => setIframeUrl(undefined)} className="btn-base btn-ghost">
+							Stop
+						</button>
+						<a href={iframeUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-cf-orange hover:underline">
+							Open in new tab
+						</a>
+					</div>
+					<div
+						className="
+							relative overflow-hidden rounded-lg border border-cf-border
+							bg-surface-dark
+						"
+					>
+						<AnimatePresence>
+							{loading && (
+								<motion.div
+									className="
+										absolute inset-0 z-10 flex flex-col items-center justify-center gap-4
+										bg-surface-dark/95 backdrop-blur-sm
+									"
+									initial={{ opacity: 1 }}
+									exit={{ opacity: 0 }}
+									transition={{ duration: 0.5, ease: 'easeOut' }}
+								>
+									<ConnectingBars />
+									<span className="text-sm font-medium text-surface-dark-text/80">Starting OpenCode...</span>
+								</motion.div>
+							)}
+						</AnimatePresence>
+						<iframe
+							src={iframeUrl}
+							className="h-[700px] w-full border-0"
+							onLoad={() => setLoading(false)}
+							title="OpenCode"
+							allow="clipboard-read; clipboard-write"
+						/>
+					</div>
+				</div>
+			) : (
+				<div className="flex items-center gap-3">
+					<button onClick={() => void launch()} disabled={loading} className="btn-base btn-primary">
+						{loading ? 'Starting...' : 'Launch OpenCode'}
+					</button>
+					{error && <span className="text-sm text-cf-error">{error}</span>}
+				</div>
+			)}
+
+			<Callout>
+				<a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
+					OpenCode
+				</a>{' '}
+				is an open-source AI coding agent that runs in your terminal or browser. The Sandbox SDK provides a dedicated <code>-opencode</code>{' '}
+				base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker. It uses built-in free
+				models by default — no API keys required.
+			</Callout>
+		</section>
+	);
+}

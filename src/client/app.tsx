@@ -1,5 +1,6 @@
+import { Play, FolderOpen, Code, Sparkles, TerminalSquare, Globe, Eye, MonitorCog, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 
 import { ErrorBoundary } from './components/error-boundary';
 import { AIPanel } from './panels/ai';
@@ -7,41 +8,30 @@ import { BackupPanel } from './panels/backup';
 import { CommandsPanel } from './panels/commands';
 import { FilesPanel } from './panels/files';
 import { InterpreterPanel } from './panels/interpreter';
+import { OpencodePanel } from './panels/opencode';
 import { PreviewPanel } from './panels/preview';
 import { TerminalPanel } from './panels/terminal';
 import { WatchPanel } from './panels/watch';
 
+import type { LucideProps } from 'lucide-react';
+
 interface PanelDefinition {
 	id: string;
 	label: string;
-	icon: string;
+	icon: ComponentType<LucideProps>;
 	component: () => ReactNode;
 }
 
 const PANELS: PanelDefinition[] = [
-	{
-		id: 'commands',
-		label: 'Execute',
-		icon: '\u25B8',
-		component: CommandsPanel,
-	},
-	{ id: 'files', label: 'Files', icon: '\u2630', component: FilesPanel },
-	{
-		id: 'interpreter',
-		label: 'Code',
-		icon: '\u2738',
-		component: InterpreterPanel,
-	},
-	{ id: 'ai', label: 'AI Exec', icon: '\u2726', component: AIPanel },
-	{
-		id: 'terminal',
-		label: 'Terminal',
-		icon: '\u2588',
-		component: TerminalPanel,
-	},
-	{ id: 'preview', label: 'Preview', icon: '\u29BE', component: PreviewPanel },
-	{ id: 'watch', label: 'Watch', icon: '\u25CE', component: WatchPanel },
-	{ id: 'backup', label: 'Backup', icon: '\u2B13', component: BackupPanel },
+	{ id: 'commands', label: 'Execute', icon: Play, component: CommandsPanel },
+	{ id: 'files', label: 'Files', icon: FolderOpen, component: FilesPanel },
+	{ id: 'interpreter', label: 'Code', icon: Code, component: InterpreterPanel },
+	{ id: 'ai', label: 'AI Exec', icon: Sparkles, component: AIPanel },
+	{ id: 'terminal', label: 'Terminal', icon: TerminalSquare, component: TerminalPanel },
+	{ id: 'preview', label: 'Preview', icon: Globe, component: PreviewPanel },
+	{ id: 'watch', label: 'Watch', icon: Eye, component: WatchPanel },
+	{ id: 'opencode', label: 'OpenCode', icon: MonitorCog, component: OpencodePanel },
+	{ id: 'backup', label: 'Backup', icon: Archive, component: BackupPanel },
 ];
 
 function getInitialPanel(): string {
@@ -100,33 +90,37 @@ export function App() {
 				</div>
 
 				<nav className="flex-1 overflow-y-auto py-3">
-					{PANELS.map((panel, index) => (
-						<button
-							key={panel.id}
-							onClick={() => navigate(panel.id)}
-							className={`
-								relative flex w-full items-center gap-2.5 px-5 py-2.5 text-left text-sm
-								transition-colors
-								${activePanel === panel.id ? 'font-medium text-cf-orange' : 'text-cf-text-muted hover:bg-cf-bg-300 hover:text-cf-text'}
-							`}
-						>
-							{/* Animated active indicator */}
-							{activePanel === panel.id && (
-								<motion.div
-									className="absolute inset-0 border-l-3 border-l-cf-orange bg-cf-bg-300"
-									layoutId="sidebar-active"
-									transition={{
-										type: 'spring',
-										stiffness: 380,
-										damping: 32,
-									}}
-								/>
-							)}
-							<span className="relative z-10 font-mono text-[11px] text-cf-text-subtle">{String(index + 1).padStart(2, '0')}</span>
-							<span className="relative z-10 w-4.5 text-center opacity-60">{panel.icon}</span>
-							<span className="relative z-10">{panel.label}</span>
-						</button>
-					))}
+					{PANELS.map((panel, index) => {
+						const Icon = panel.icon;
+						return (
+							<button
+								key={panel.id}
+								onClick={() => navigate(panel.id)}
+								className={`
+									relative flex w-full items-center gap-2.5 px-5 py-2.5 text-left text-sm
+									transition-colors
+									${activePanel === panel.id ? 'font-medium text-cf-orange' : 'text-cf-text-muted hover:bg-cf-bg-300 hover:text-cf-text'}
+								`}
+							>
+								{activePanel === panel.id && (
+									<motion.div
+										className="
+											absolute inset-0 border-l-3 border-l-cf-orange bg-cf-bg-300
+										"
+										layoutId="sidebar-active"
+										transition={{
+											type: 'spring',
+											stiffness: 380,
+											damping: 32,
+										}}
+									/>
+								)}
+								<span className="relative z-10 font-mono text-[11px] text-cf-text-subtle">{String(index + 1).padStart(2, '0')}</span>
+								<Icon className="relative z-10 size-4 opacity-60" strokeWidth={1.75} />
+								<span className="relative z-10">{panel.label}</span>
+							</button>
+						);
+					})}
 				</nav>
 			</aside>
 

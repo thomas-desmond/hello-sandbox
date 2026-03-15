@@ -1,92 +1,112 @@
-# Minimal Sandbox SDK Example
+# Hello Sandbox
 
-A minimal Cloudflare Worker that demonstrates the core capabilities of the Sandbox SDK.
+An interactive demo application for the [Cloudflare Sandbox SDK](https://developers.cloudflare.com/sandbox/). It provides a polished web UI that showcases isolated code execution containers running on Cloudflare's edge network.
 
 ## Features
 
-- **Command Execution**: Execute Python code in isolated containers
-- **File Operations**: Read and write files in the sandbox filesystem
-- **Simple API**: Two endpoints demonstrating basic sandbox operations
+The app includes 8 panels, each demonstrating a different Sandbox SDK capability:
 
-## How It Works
+- **Commands** -- Execute shell commands and view stdout/stderr/exit codes
+- **Files** -- Full filesystem CRUD (write, read, mkdir, list, delete)
+- **Code Interpreter** -- Stateful Python and JavaScript REPL with variable persistence across calls
+- **AI Exec** -- Natural language to code: an LLM generates Python and executes it in the sandbox
+- **Terminal** -- Interactive terminal session via xterm.js over WebSocket
+- **Preview** -- Start HTTP servers inside the container and expose them via public preview URLs
+- **Watch** -- Live filesystem change stream via Server-Sent Events
+- **Backup** -- Create and restore squashfs snapshots of the sandbox filesystem
 
-This example provides two simple endpoints:
+## Tech Stack
 
-1. **`/run`** - Executes Python code and returns the output
-2. **`/file`** - Creates a file, reads it back, and returns the contents
+| Layer           | Technology                       |
+| --------------- | -------------------------------- |
+| Runtime         | Cloudflare Workers               |
+| Server          | Hono                             |
+| Frontend        | React 19                         |
+| Build           | Vite + `@cloudflare/vite-plugin` |
+| CSS             | Tailwind CSS v4                  |
+| Terminal        | xterm.js                         |
+| AI              | Vercel AI SDK + Workers AI       |
+| Language        | TypeScript                       |
+| Package Manager | Bun                              |
 
-## API Endpoints
+## Getting Started
 
-### Execute Python Code
+### Prerequisites
 
-```bash
-GET http://localhost:8787/run
-```
+- [Bun](https://bun.sh/)
+- [Docker](https://www.docker.com/) (for local sandbox containers)
 
-Runs `python -c "print(2 + 2)"` and returns:
-
-```json
-{
-  "output": "4\n",
-  "success": true
-}
-```
-
-### File Operations
-
-```bash
-GET http://localhost:8787/file
-```
-
-Creates `/workspace/hello.txt`, reads it back, and returns:
-
-```json
-{
-  "content": "Hello, Sandbox!"
-}
-```
-
-## Setup
-
-1. From the project root, run:
+### Install
 
 ```bash
-npm install
-npm run build
+bun install
 ```
 
-2. Run locally:
+### Develop
 
 ```bash
-cd examples/minimal # if you're not already here
-npm run dev
+bun run dev
 ```
 
-The first run will build the Docker container (2-3 minutes). Subsequent runs are much faster.
+The first run builds the Docker container (~2-3 minutes). The app is served at `http://localhost:8787`.
 
-## Testing
+### Type Check
 
 ```bash
-# Test command execution
-curl http://localhost:8787/run
-
-# Test file operations
-curl http://localhost:8787/file
+bun run typecheck
 ```
 
-## Deploy
+### Lint and Format
 
 ```bash
-npm run deploy
+bun run lint      # check
+bun run format    # fix
+```
+
+### Deploy
+
+```bash
+bun run deploy
 ```
 
 After first deployment, wait 2-3 minutes for container provisioning before making requests.
 
-## Next Steps
+## Project Structure
 
-This minimal example is the starting point for more complex applications. See the [Sandbox SDK documentation](https://developers.cloudflare.com/sandbox/) for:
+```
+src/
+  index.ts              # Worker entry: Hono app, WebSocket terminal, SPA fallback
+  api/
+    sandbox.ts          # Shared sandbox accessor
+    exec.ts             # POST /api/exec
+    files.ts            # POST /api/files/*
+    interpreter.ts      # POST /api/code
+    ai.ts               # POST /api/ai
+    preview.ts          # POST /api/preview/*
+    watch.ts            # GET  /api/watch (SSE)
+    backup.ts           # POST /api/backup/*
+  client/
+    app.tsx             # Main app shell (sidebar nav, animated panels, status bar)
+    panels/             # One component per demo panel
+    components/         # Shared UI components
+    lib/                # API client, formatting, syntax highlighting
+```
 
-- Advanced command execution and streaming
-- Background processes
-- Preview URLs for exposed services
-- Custom Docker images
+## Configuration
+
+Cloudflare bindings are defined in `wrangler.jsonc`:
+
+- **AI** -- Workers AI binding for LLM inference
+- **Sandbox** -- Durable Object + Container binding (`cloudflare/sandbox:0.7.17-python`)
+- **Assets** -- Static asset serving in SPA mode
+
+After changing bindings, regenerate types:
+
+```bash
+bun run cf-typegen
+```
+
+## Resources
+
+- [Sandbox SDK Documentation](https://developers.cloudflare.com/sandbox/)
+- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)

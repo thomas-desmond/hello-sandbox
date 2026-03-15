@@ -1,4 +1,4 @@
-import { highlightTS } from '@/lib/highlight';
+import { highlightCode } from '@/lib/highlight';
 
 export function CodeBlock({ code, label = 'SDK CODE', variant }: { code: string; label?: string; variant?: 'ai' }) {
 	return (
@@ -18,7 +18,7 @@ export function CodeBlock({ code, label = 'SDK CODE', variant }: { code: string;
 			>
 				{label}
 			</div>
-			<div className="px-5 pt-5 pb-4">{highlightTS(code)}</div>
+			<div className="px-5 pt-5 pb-4" dangerouslySetInnerHTML={{ __html: highlightCode(code) }} />
 		</div>
 	);
 }

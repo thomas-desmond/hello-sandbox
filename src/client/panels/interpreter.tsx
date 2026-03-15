@@ -6,6 +6,7 @@ import { Callout } from '@/components/callout';
 import { CodeBlock } from '@/components/code-block';
 import { Output, Stdout, Stderr, Info, Dim } from '@/components/output';
 import { api } from '@/lib/api';
+import { highlightCode } from '@/lib/highlight';
 
 interface CodeLogs {
 	stdout: string[];
@@ -255,23 +256,54 @@ export function InterpreterPanel() {
 					</AnimatePresence>
 				</div>
 
-				{/* Code textarea */}
-				<textarea
-					value={code}
-					onChange={(event_) => setCode(event_.target.value)}
-					onKeyDown={(event_) => {
-						if (event_.key === 'Enter' && (event_.metaKey || event_.ctrlKey)) {
-							event_.preventDefault();
-							void runCode();
-						}
-					}}
-					rows={10}
-					spellCheck={false}
+				{/* Syntax-highlighted code editor */}
+				<div
 					className="
-						min-h-[120px] input-field resize-y leading-relaxed
-						placeholder:text-cf-text-subtle
+						group relative min-h-[120px] overflow-hidden rounded-lg border
+						border-cf-border bg-cf-bg-200 transition-[border-color,box-shadow]
+						focus-within:border-cf-orange focus-within:shadow-focus
 					"
-				/>
+				>
+					<pre
+						aria-hidden
+						className="
+							pointer-events-none absolute inset-0 overflow-auto p-[0.625rem_0.875rem]
+							font-mono text-[0.9375rem] leading-relaxed wrap-break-word
+							whitespace-pre-wrap text-cf-text
+						"
+						dangerouslySetInnerHTML={{ __html: highlightCode(code) + '\n' }}
+					/>
+					<textarea
+						value={code}
+						onChange={(event_) => setCode(event_.target.value)}
+						onKeyDown={(event_) => {
+							if (event_.key === 'Enter' && (event_.metaKey || event_.ctrlKey)) {
+								event_.preventDefault();
+								void runCode();
+							}
+							if (event_.key === 'Tab') {
+								event_.preventDefault();
+								const target = event_.currentTarget;
+								const start = target.selectionStart;
+								const end = target.selectionEnd;
+								const newCode = code.slice(0, start) + '    ' + code.slice(end);
+								setCode(newCode);
+								requestAnimationFrame(() => {
+									target.selectionStart = target.selectionEnd = start + 4;
+								});
+							}
+						}}
+						rows={10}
+						spellCheck={false}
+						className="
+							relative min-h-[120px] w-full resize-y bg-transparent
+							p-[0.625rem_0.875rem] font-mono text-[0.9375rem] leading-relaxed
+							wrap-break-word whitespace-pre-wrap text-transparent caret-cf-text
+							outline-none
+							selection:bg-[oklch(from_#ff4801_l_c_h/20%)] selection:text-transparent
+						"
+					/>
+				</div>
 
 				{/* Controls */}
 				<div className="flex items-center justify-between">

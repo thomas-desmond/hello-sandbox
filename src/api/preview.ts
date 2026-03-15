@@ -73,7 +73,6 @@ function getDemoHTML(): string {
   <div class="card">
     <h1>Hello from <span class="accent">Sandbox</span></h1>
     <p>Served from an isolated container on Cloudflare's edge network.</p>
-    <div class="badge">sandbox://demo-sandbox:8080</div>
   </div>
 </body>
 </html>`;

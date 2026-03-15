@@ -120,6 +120,19 @@
 	}
 }
 
+/* sugar-high syntax highlighting tokens → CF theme colors */
+:root {
+	--sh-keyword: var(--color-cf-ai);
+	--sh-string: var(--color-cf-success);
+	--sh-comment: var(--color-cf-text-subtle);
+	--sh-class: var(--color-cf-warning);
+	--sh-identifier: var(--color-cf-text);
+	--sh-sign: var(--color-cf-text-muted);
+	--sh-property: var(--color-cf-orange);
+	--sh-entity: var(--color-cf-info);
+	--sh-jsxliterals: var(--color-cf-text-muted);
+}
+
 @layer base {
 	html,
 	body {

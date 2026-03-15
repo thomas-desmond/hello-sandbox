@@ -22,6 +22,12 @@
 			"instance_type": "lite",
 			"max_instances": 1,
 		},
+		{
+			"class_name": "OpencodeSandbox",
+			"image": "./Dockerfile.opencode",
+			"instance_type": "basic",
+			"max_instances": 1,
+		},
 	],
 	"durable_objects": {
 		"bindings": [
@@ -29,12 +35,20 @@
 				"class_name": "Sandbox",
 				"name": "Sandbox",
 			},
+			{
+				"class_name": "OpencodeSandbox",
+				"name": "OpencodeSandbox",
+			},
 		],
 	},
 	"migrations": [
 		{
 			"new_sqlite_classes": ["Sandbox"],
 			"tag": "v1",
+		},
+		{
+			"new_sqlite_classes": ["OpencodeSandbox"],
+			"tag": "v2",
 		},
 	],
 }

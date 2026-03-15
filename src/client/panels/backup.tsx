@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/badge';
 import { Callout } from '@/components/callout';
@@ -36,6 +36,12 @@ interface ListResult {
 	path: string;
 }
 
+interface BackupStatus {
+	available: boolean;
+	message: string;
+	missingConfig?: string[];
+}
+
 const SDK_CODE = `const backup = await sandbox.createBackup({
   dir: '/workspace',
   name: 'pre-deploy-checkpoint',
@@ -43,15 +49,89 @@ const SDK_CODE = `const backup = await sandbox.createBackup({
 // backup: { id: 'abc-123', dir: '/workspace' }
 await sandbox.restoreBackup(backup);`;
 
+const WRANGLER_CONFIG_EXAMPLE = `// wrangler.jsonc
+{
+  "r2_buckets": [
+    { "binding": "BACKUP_BUCKET", "bucket_name": "my-backup-bucket" }
+  ],
+  "vars": {
+    "BACKUP_BUCKET_NAME": "my-backup-bucket",
+    "CLOUDFLARE_ACCOUNT_ID": "<your-account-id>"
+  }
+}
+// Then set secrets:
+// npx wrangler secret put R2_ACCESS_KEY_ID
+// npx wrangler secret put R2_SECRET_ACCESS_KEY`;
+
+/**
+ * Map raw error messages from the SDK into user-friendly descriptions
+ * with actionable remediation steps.
+ */
+function formatBackupError(message: string): { title: string; detail: string } {
+	if (message.includes('not configured') || message.includes('BACKUP_BUCKET')) {
+		return {
+			title: 'Backup is not configured',
+			detail:
+				'The BACKUP_BUCKET R2 binding is missing from your wrangler.jsonc. ' +
+				'Add an R2 bucket binding and the required credentials to enable backup/restore.',
+		};
+	}
+
+	if (message.includes('presigned URL credentials') || message.includes('R2_ACCESS_KEY_ID')) {
+		return {
+			title: 'Missing R2 credentials',
+			detail:
+				'The R2 bucket binding exists, but presigned URL credentials are missing. ' +
+				'Set BACKUP_BUCKET_NAME, CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY ' +
+				'as environment variables or secrets in your wrangler.jsonc.',
+		};
+	}
+
+	if (message.includes('Network error')) {
+		return {
+			title: 'Network error',
+			detail: 'Unable to reach the server. Make sure the dev server is running (npx wrangler dev).',
+		};
+	}
+
+	return { title: 'Backup failed', detail: message };
+}
+
 export function BackupPanel() {
 	const [directory, setDirectory] = useState('/workspace');
 	const [backup, setBackup] = useState<BackupInfo | undefined>();
 	const [loading, setLoading] = useState(false);
 	const [restoring, setRestoring] = useState(false);
 	const [output, setOutput] = useState<string[]>([]);
-	const [error, setError] = useState<string | undefined>();
+	const [error, setError] = useState<{ title: string; detail: string } | undefined>();
 	const [verifyOutput, setVerifyOutput] = useState<string | undefined>();
 	const [verifyLoading, setVerifyLoading] = useState(false);
+	const [configStatus, setConfigStatus] = useState<BackupStatus | undefined>();
+	const [configLoading, setConfigLoading] = useState(true);
+
+	// Check backup configuration on mount
+	useEffect(() => {
+		let cancelled = false;
+		async function checkStatus() {
+			try {
+				const status = await api<BackupStatus>('/api/backup/status');
+				if (!cancelled) setConfigStatus(status);
+			} catch {
+				if (!cancelled) {
+					setConfigStatus({
+						available: false,
+						message: 'Unable to check backup configuration. The server may not be running.',
+					});
+				}
+			} finally {
+				if (!cancelled) setConfigLoading(false);
+			}
+		}
+		void checkStatus();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	async function createBackup() {
 		if (!directory.trim()) return;
@@ -64,7 +144,8 @@ export function BackupPanel() {
 			setBackup(data.backup);
 			setOutput([`Backup created successfully`, `  ID: ${data.backup.id}`, `  Directory: ${data.backup.dir}`]);
 		} catch (error_) {
-			setError(error_ instanceof Error ? error_.message : 'Failed to create backup');
+			const message = error_ instanceof Error ? error_.message : 'Failed to create backup';
+			setError(formatBackupError(message));
 		} finally {
 			setLoading(false);
 		}
@@ -80,7 +161,8 @@ export function BackupPanel() {
 			});
 			setOutput((previous) => [...previous, '', `Backup restored successfully`, `  ID: ${data.id}`, `  Directory: ${data.dir}`]);
 		} catch (error_) {
-			setError(error_ instanceof Error ? error_.message : 'Failed to restore backup');
+			const message = error_ instanceof Error ? error_.message : 'Failed to restore backup';
+			setError(formatBackupError(message));
 		} finally {
 			setRestoring(false);
 		}
@@ -119,6 +201,9 @@ export function BackupPanel() {
 		}
 	}
 
+	const isNotConfigured = configStatus && !configStatus.available;
+	const isReady = configStatus?.available;
+
 	return (
 		<section className="flex flex-col gap-6">
 			<div>
@@ -130,6 +215,61 @@ export function BackupPanel() {
 			</div>
 
 			<CodeBlock code={SDK_CODE} />
+
+			{/* Configuration status banner */}
+			{configLoading && (
+				<div className="flex items-center gap-2 text-sm text-cf-text-muted">
+					<Spinner className="size-4" />
+					Checking backup configuration...
+				</div>
+			)}
+
+			{isNotConfigured && (
+				<div className="rounded-lg border border-cf-border bg-cf-bg-300 p-4">
+					<div className="flex items-start gap-3">
+						<div className="flex-1">
+							<h3 className="font-sans text-sm font-medium text-cf-error">Backup is not configured</h3>
+							<p className="mt-1 text-sm text-cf-text-muted">{configStatus.message}</p>
+							{configStatus.missingConfig && (
+								<div className="mt-3">
+									<p className="text-xs font-medium text-cf-text">Missing configuration:</p>
+									<ul className="mt-1 list-inside list-disc text-xs text-cf-text-muted">
+										{configStatus.missingConfig.map((item) => (
+											<li key={item}>
+												<code
+													className="
+														rounded-sm bg-cf-bg-200 px-1 py-0.5 font-mono text-xs text-cf-text
+													"
+												>
+													{item}
+												</code>
+											</li>
+										))}
+									</ul>
+								</div>
+							)}
+							<details className="mt-3">
+								<summary
+									className="
+										cursor-pointer text-xs font-medium text-cf-text
+										hover:text-cf-text-muted
+									"
+								>
+									Show wrangler.jsonc example
+								</summary>
+								<pre
+									className="
+										mt-2 overflow-x-auto rounded-sm bg-cf-bg-200 p-2 font-mono text-xs
+										text-cf-text-muted
+									"
+								>
+									{WRANGLER_CONFIG_EXAMPLE}
+								</pre>
+							</details>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<div className="flex flex-col gap-4">
 				{/* Backup controls */}
@@ -148,13 +288,22 @@ export function BackupPanel() {
 							input-field flex-1
 							placeholder:text-cf-text-subtle
 						"
+						disabled={isNotConfigured}
 					/>
 					<div className="flex gap-2">
-						<button onClick={createBackup} disabled={loading || !directory.trim()} className="btn-base flex items-center gap-2 btn-primary">
+						<button
+							onClick={createBackup}
+							disabled={loading || !directory.trim() || isNotConfigured}
+							className="btn-base flex items-center gap-2 btn-primary"
+						>
 							{loading ? <Spinner className="size-4" /> : undefined}
 							Create Backup
 						</button>
-						<button onClick={restoreBackup} disabled={restoring || !backup} className="btn-base flex items-center gap-2 btn-ghost">
+						<button
+							onClick={restoreBackup}
+							disabled={restoring || !backup || isNotConfigured}
+							className="btn-base flex items-center gap-2 btn-ghost"
+						>
 							{restoring ? <Spinner className="size-4" /> : undefined}
 							Restore
 						</button>
@@ -179,45 +328,51 @@ export function BackupPanel() {
 								{'\n'}
 							</span>
 						))}
-						{error && <Stderr>{error}</Stderr>}
+						{error && (
+							<Stderr>
+								{error.title}: {error.detail}
+							</Stderr>
+						)}
 					</Output>
 				)}
 
 				{/* Demo workflow */}
-				<div
-					className="
-						rounded-lg border border-dashed border-cf-border bg-cf-bg-200 p-4
-					"
-				>
-					<h3 className="mb-3 font-sans text-sm font-medium text-cf-text">Demo Workflow</h3>
-					<p className="mb-3 text-sm text-cf-text-muted">
-						Create a backup, delete all files, verify they are gone, then restore the backup to bring them back.
-					</p>
-					<div className="flex flex-wrap gap-2">
-						<button onClick={deleteAllFiles} disabled={verifyLoading} className="btn-preset">
-							Delete all files
-						</button>
-						<button onClick={listWorkspace} disabled={verifyLoading} className="btn-preset">
-							List /workspace
-						</button>
-					</div>
-					{verifyLoading && (
-						<div className="mt-3 flex items-center gap-2 text-xs text-cf-text-subtle">
-							<Spinner />
-							Running...
+				{isReady && (
+					<div
+						className="
+							rounded-lg border border-dashed border-cf-border bg-cf-bg-200 p-4
+						"
+					>
+						<h3 className="mb-3 font-sans text-sm font-medium text-cf-text">Demo Workflow</h3>
+						<p className="mb-3 text-sm text-cf-text-muted">
+							Create a backup, delete all files, verify they are gone, then restore the backup to bring them back.
+						</p>
+						<div className="flex flex-wrap gap-2">
+							<button onClick={deleteAllFiles} disabled={verifyLoading} className="btn-preset">
+								Delete all files
+							</button>
+							<button onClick={listWorkspace} disabled={verifyLoading} className="btn-preset">
+								List /workspace
+							</button>
 						</div>
-					)}
-					{verifyOutput && (
-						<Output
-							className={`
-								mt-3 min-h-[60px]
-								${verifyLoading ? 'opacity-50' : ''}
-							`}
-						>
-							<Stdout>{verifyOutput}</Stdout>
-						</Output>
-					)}
-				</div>
+						{verifyLoading && (
+							<div className="mt-3 flex items-center gap-2 text-xs text-cf-text-subtle">
+								<Spinner />
+								Running...
+							</div>
+						)}
+						{verifyOutput && (
+							<Output
+								className={`
+									mt-3 min-h-[60px]
+									${verifyLoading ? 'opacity-50' : ''}
+								`}
+							>
+								<Stdout>{verifyOutput}</Stdout>
+							</Output>
+						)}
+					</div>
+				)}
 			</div>
 
 			<Callout>

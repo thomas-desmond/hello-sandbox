@@ -60,9 +60,9 @@ function AILoadingState() {
 				className="absolute inset-0"
 				animate={{
 					background: [
-						'linear-gradient(135deg, #fffdfb 0%, oklch(from #9616ff 0.95 0.03 310) 30%, #fffdfb 60%, oklch(from #ff4801 0.95 0.03 30) 100%)',
-						'linear-gradient(135deg, oklch(from #ff4801 0.95 0.03 30) 0%, #fffdfb 30%, oklch(from #9616ff 0.95 0.03 310) 60%, #fffdfb 100%)',
-						'linear-gradient(135deg, #fffdfb 0%, oklch(from #9616ff 0.95 0.03 310) 30%, #fffdfb 60%, oklch(from #ff4801 0.95 0.03 30) 100%)',
+						'linear-gradient(135deg, oklch(0.97 0.02 310) 0%, oklch(0.93 0.04 310) 50%, oklch(0.97 0.02 310) 100%)',
+						'linear-gradient(135deg, oklch(0.93 0.04 310) 0%, oklch(0.97 0.02 310) 50%, oklch(0.93 0.04 310) 100%)',
+						'linear-gradient(135deg, oklch(0.97 0.02 310) 0%, oklch(0.93 0.04 310) 50%, oklch(0.97 0.02 310) 100%)',
 					],
 				}}
 				transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}

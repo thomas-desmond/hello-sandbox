@@ -17,11 +17,14 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
+		"@opencode-ai/sdk": "^1.2.26",
 		"ai": "^6",
 		"hono": "^4",
+		"lucide-react": "^0.577.0",
 		"motion": "^12.36.0",
 		"react": "^19",
 		"react-dom": "^19",
+		"sugar-high": "^0.9.5",
 		"workers-ai-provider": "^3",
 		"zod": "^4"
 	},
