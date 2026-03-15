@@ -1,34 +1,37 @@
-import { getSandbox } from '@cloudflare/sandbox';
+import { getSandbox, proxyToSandbox } from '@cloudflare/sandbox';
+import { Hono } from 'hono';
 
+import api from './api';
+
+// Required: re-export Sandbox class for Durable Object binding
 export { Sandbox } from '@cloudflare/sandbox';
 
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
+const app = new Hono<{ Bindings: Env }>();
 
-    // Get or create a sandbox instance
-    const sandbox = getSandbox(env.Sandbox, 'my-sandbox');
+// Proxy preview-URL requests to sandbox containers (before all other routes)
+app.use('*', async (c, next) => {
+	const proxyResponse = await proxyToSandbox(c.req.raw, c.env);
+	if (proxyResponse) return proxyResponse;
+	return next();
+});
 
-    // Execute a shell command
-    if (url.pathname === '/run') {
-      const result = await sandbox.exec('echo "2 + 2 = $((2 + 2))"');
-      return Response.json({
-        output: result.stdout,
-        error: result.stderr,
-        exitCode: result.exitCode,
-        success: result.success
-      });
-    }
+// WebSocket terminal upgrade — must be handled before Hono JSON routing
+app.get('/ws/terminal', async (c) => {
+	if (c.req.header('Upgrade') !== 'websocket') {
+		return c.text('WebSocket upgrade required', 426);
+	}
+	// getSandbox() proxy exposes terminal() at runtime
+	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any -- sandbox proxy typing not available
+	const sandbox = getSandbox(c.env.Sandbox, 'demo-sandbox') as any;
+	return await sandbox.terminal(c.req.raw, { cols: 120, rows: 30 });
+});
 
-    // Work with files
-    if (url.pathname === '/file') {
-      await sandbox.writeFile('/workspace/hello.txt', 'Hello, Sandbox!');
-      const file = await sandbox.readFile('/workspace/hello.txt');
-      return Response.json({
-        content: file.content
-      });
-    }
+// Mount all API routes
+app.route('/api', api);
 
-    return new Response('Try /run or /file');
-  }
-};
+// Fall back to static assets for everything else (SPA)
+app.all('*', async (c) => {
+	return c.env.ASSETS.fetch(c.req.raw);
+});
+
+export default app;
