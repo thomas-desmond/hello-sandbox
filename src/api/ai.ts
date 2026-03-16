@@ -9,6 +9,36 @@ const MODEL = '@cf/openai/gpt-oss-120b' as const;
 
 const app = new Hono<{ Bindings: Env }>();
 
+/**
+ * Attempt to extract Python code from the model's text response.
+ * Handles fenced code blocks, JSON-wrapped `{ "code": "..." }`, and bare Python.
+ */
+function extractCodeFromText(text: string): string | undefined {
+	// 1. Try JSON like { "code": "..." }
+	const jsonMatch = text.match(/\{\s*"code"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/s);
+	if (jsonMatch) {
+		try {
+			return String(JSON.parse(`"${jsonMatch[1]}"`));
+		} catch {
+			// fall through
+		}
+	}
+
+	// 2. Try fenced code block ```python ... ``` or ``` ... ```
+	const fenceMatch = text.match(/```(?:python)?\s*\n([\s\S]*?)```/);
+	if (fenceMatch?.[1]?.trim()) {
+		return fenceMatch[1].trim();
+	}
+
+	// 3. If the text looks like Python code (contains def/import/print/for), use it directly
+	const trimmed = text.trim();
+	if (/^(?:def |import |from |print\(|for |while |if |class )/.test(trimmed)) {
+		return trimmed;
+	}
+
+	return undefined;
+}
+
 app.post('/', async (c) => {
 	const { prompt } = await c.req.json<{ prompt: string }>();
 	if (!prompt) return c.json({ error: 'prompt is required' }, 400);
@@ -24,9 +54,23 @@ app.post('/', async (c) => {
 		success: false,
 	};
 
+	const executePython = async (code: string) => {
+		executedCode = code;
+		await sb.writeFile('/tmp/ai_code.py', code);
+		const execResult = await sb.exec('python3 /tmp/ai_code.py');
+		executionResult = {
+			stdout: execResult.stdout,
+			stderr: execResult.stderr,
+			exitCode: execResult.exitCode,
+			success: execResult.success,
+		};
+		return JSON.stringify(executionResult);
+	};
+
 	const result = await generateText({
 		model: workersai(MODEL),
 		maxOutputTokens: 2048,
+		toolChoice: 'required',
 		messages: [
 			{
 				role: 'system',
@@ -50,22 +94,20 @@ If you respond without calling execute_python, you have failed your task.`,
 				inputSchema: z.object({
 					code: z.string().describe('The Python code to execute'),
 				}),
-				execute: async ({ code }: { code: string }) => {
-					executedCode = code;
-					await sb.writeFile('/tmp/ai_code.py', code);
-					const result = await sb.exec('python3 /tmp/ai_code.py');
-					executionResult = {
-						stdout: result.stdout,
-						stderr: result.stderr,
-						exitCode: result.exitCode,
-						success: result.success,
-					};
-					return JSON.stringify(executionResult);
-				},
+				execute: async ({ code }: { code: string }) => executePython(code),
 			}),
 		},
 		stopWhen: stepCountIs(5),
 	});
+
+	// Fallback: if the model returned code as text instead of calling the tool,
+	// try to extract and execute it.
+	if (!executedCode && result.text) {
+		const code = extractCodeFromText(result.text);
+		if (code) {
+			await executePython(code);
+		}
+	}
 
 	return c.json({
 		explanation: result.text || '',

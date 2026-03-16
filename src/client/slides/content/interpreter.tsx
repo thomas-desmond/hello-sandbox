@@ -43,8 +43,7 @@ type Language = 'python' | 'javascript';
 
 const SDK_CODE = `const ctx = await sandbox.createCodeContext({ language: "python" });
 await sandbox.runCode("x = 42", { context: ctx });
-const result = await sandbox.runCode("print(x * 2)", { context: ctx });
-// State persists: result.logs[0].text === "84"`;
+const result = await sandbox.runCode("print(x * 2)", { context: ctx });`;
 
 const PRESETS: Record<string, { label: string; python: string; javascript: string }> = {
 	fibonacci: {
@@ -133,6 +132,7 @@ export function InterpreterSlide({ step }: SlideProperties) {
 	const debounceReference = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	const runIdReference = useRef(0);
 	const contextIdReference = useRef(contextId);
+	const preReference = useRef<HTMLPreElement>(null);
 	contextIdReference.current = contextId;
 
 	// Single execute function that takes explicit code+language+contextId.
@@ -242,7 +242,7 @@ export function InterpreterSlide({ step }: SlideProperties) {
 									<button
 										onClick={() => switchLanguage('python')}
 										className={`
-											rounded-full px-4 py-1.5 text-sm font-medium transition-colors
+											rounded-full px-4 py-1.5 text-base font-medium transition-colors
 											active:translate-y-px active:scale-[0.98]
 											${language === 'python' ? 'bg-cf-orange text-[#fff]' : 'text-cf-text-muted hover:text-cf-text'}`}
 									>
@@ -251,7 +251,7 @@ export function InterpreterSlide({ step }: SlideProperties) {
 									<button
 										onClick={() => switchLanguage('javascript')}
 										className={`
-											rounded-full px-4 py-1.5 text-sm font-medium transition-colors
+											rounded-full px-4 py-1.5 text-base font-medium transition-colors
 											active:translate-y-px active:scale-[0.98]
 											${language === 'javascript' ? 'bg-cf-orange text-[#fff]' : 'text-cf-text-muted hover:text-cf-text'}`}
 									>
@@ -281,9 +281,10 @@ export function InterpreterSlide({ step }: SlideProperties) {
 								"
 							>
 								<pre
+									ref={preReference}
 									aria-hidden
 									className="
-										pointer-events-none absolute inset-0 overflow-auto
+										pointer-events-none absolute inset-0 overflow-hidden
 										p-[0.625rem_0.875rem] font-mono text-[0.9375rem] leading-relaxed
 										wrap-break-word whitespace-pre-wrap text-cf-text
 									"
@@ -292,6 +293,12 @@ export function InterpreterSlide({ step }: SlideProperties) {
 								<textarea
 									value={code}
 									onChange={(event_) => setCode(event_.target.value)}
+									onScroll={(event_) => {
+										if (preReference.current) {
+											preReference.current.scrollTop = event_.currentTarget.scrollTop;
+											preReference.current.scrollLeft = event_.currentTarget.scrollLeft;
+										}
+									}}
 									onKeyDown={(event_) => {
 										if (event_.key === 'Enter' && (event_.metaKey || event_.ctrlKey)) {
 											event_.preventDefault();
@@ -349,7 +356,7 @@ export function InterpreterSlide({ step }: SlideProperties) {
 									`}
 								>
 									<Badge variant={result?.error ? 'error' : 'success'}>#{result?.executionCount ?? ' '}</Badge>
-									<span className="font-mono text-sm text-cf-text-subtle">
+									<span className="font-mono text-base text-cf-text-subtle">
 										{result?.contextId ? `context: ${result.contextId.slice(0, 12)}...` : '\u00A0'}
 									</span>
 								</div>

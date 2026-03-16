@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/badge';
+import { Markdown } from '@/components/markdown';
 import { Output, Stdout, Stderr, Dim } from '@/components/output';
 import { api } from '@/lib/api';
 import { highlightCode } from '@/lib/highlight';
@@ -118,7 +119,7 @@ export function AISlide({ step }: SlideProperties) {
 										<div
 											className="
 												max-h-[250px] overflow-y-auto rounded-lg border border-cf-ai/30
-												bg-cf-bg-200 px-5 py-4 font-mono text-sm/relaxed
+												bg-cf-bg-200 px-5 py-4 font-mono text-base/relaxed
 											"
 											dangerouslySetInnerHTML={{ __html: highlightCode(result.generatedCode) }}
 										/>
@@ -141,7 +142,7 @@ export function AISlide({ step }: SlideProperties) {
 															/>
 														))}
 													</div>
-													<span className="text-sm font-medium text-cf-ai">AI is thinking...</span>
+													<span className="text-base font-medium text-cf-ai">AI is thinking...</span>
 												</div>
 											) : (
 												<Dim>Generated code will appear here</Dim>
@@ -178,7 +179,7 @@ export function AISlide({ step }: SlideProperties) {
 									"
 								>
 									<span className="font-medium text-cf-ai">AI: </span>
-									{result.explanation}
+									<Markdown>{result.explanation}</Markdown>
 								</div>
 							)}
 						</div>

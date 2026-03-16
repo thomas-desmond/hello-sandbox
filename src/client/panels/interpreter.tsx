@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 import { Badge } from '@/components/badge';
 import { Callout } from '@/components/callout';
@@ -38,8 +38,7 @@ type Language = 'python' | 'javascript';
 
 const SDK_CODE = `const ctx = await sandbox.createCodeContext({ language: 'python' });
 await sandbox.runCode('x = 42', { context: ctx });
-const result = await sandbox.runCode('print(x * 2)', { context: ctx });
-// State persists: result.logs[0].text === "84"`;
+const result = await sandbox.runCode('print(x * 2)', { context: ctx });`;
 
 const PRESETS: Record<string, { label: string; python: string; javascript: string }> = {
 	fibonacci: {
@@ -161,6 +160,7 @@ export function InterpreterPanel() {
 	const [contextId, setContextId] = useState<string | undefined>();
 	const [result, setResult] = useState<CodeResult | undefined>();
 	const [loading, setLoading] = useState(false);
+	const preReference = useRef<HTMLPreElement>(null);
 	const [error, setError] = useState<string | undefined>();
 
 	const runCode = useCallback(async () => {
@@ -265,17 +265,24 @@ export function InterpreterPanel() {
 					"
 				>
 					<pre
+						ref={preReference}
 						aria-hidden
 						className="
-							pointer-events-none absolute inset-0 overflow-auto p-[0.625rem_0.875rem]
-							font-mono text-[0.9375rem] leading-relaxed wrap-break-word
-							whitespace-pre-wrap text-cf-text
+							pointer-events-none absolute inset-0 overflow-hidden
+							p-[0.625rem_0.875rem] font-mono text-[0.9375rem] leading-relaxed
+							wrap-break-word whitespace-pre-wrap text-cf-text
 						"
 						dangerouslySetInnerHTML={{ __html: highlightCode(code) + '\n' }}
 					/>
 					<textarea
 						value={code}
 						onChange={(event_) => setCode(event_.target.value)}
+						onScroll={(event_) => {
+							if (preReference.current) {
+								preReference.current.scrollTop = event_.currentTarget.scrollTop;
+								preReference.current.scrollLeft = event_.currentTarget.scrollLeft;
+							}
+						}}
 						onKeyDown={(event_) => {
 							if (event_.key === 'Enter' && (event_.metaKey || event_.ctrlKey)) {
 								event_.preventDefault();

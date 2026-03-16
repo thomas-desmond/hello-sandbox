@@ -1,4 +1,4 @@
-import { Play, FolderOpen, Code, Sparkles, TerminalSquare, Globe, Eye, MonitorCog, Archive } from 'lucide-react';
+import { Play, FolderOpen, Code, Sparkles, TerminalSquare, Globe, Eye, MonitorCog, Archive, Presentation } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 
@@ -191,7 +191,26 @@ function Explorer() {
 					/>
 					sandbox ready
 				</div>
-				<span className="text-cf-orange/70">demo-sandbox</span>
+				<div className="flex items-center gap-3">
+					<span className="text-cf-orange/70">demo-sandbox</span>
+					<button
+						onClick={() => {
+							const url = new URL(globalThis.location.href);
+							url.searchParams.set('mode', 'slides');
+							url.searchParams.set('slide', '1');
+							globalThis.location.href = url.toString();
+						}}
+						className="
+							flex items-center gap-1.5 rounded-md border border-cf-border px-2 py-0.5
+							font-sans text-[11px] font-medium text-cf-text-subtle transition-colors
+							hover:border-cf-orange hover:text-cf-orange
+						"
+						title="Enter presentation mode"
+					>
+						<Presentation className="size-3" />
+						Slides
+					</button>
+				</div>
 			</footer>
 		</div>
 	);

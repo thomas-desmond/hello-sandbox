@@ -19,7 +19,7 @@ export function RevealCode({ code, visible, label, variant }: { code: string; vi
 					<div
 						className="
 							absolute top-0 right-0 rounded-tr-lg rounded-bl-md border-b border-l
-							border-cf-border bg-cf-bg-300 px-3 py-1 font-sans text-[10px] font-medium
+							border-cf-border bg-cf-bg-300 px-3 py-1 font-sans text-xs font-medium
 							tracking-wider text-cf-text-subtle
 						"
 					>

@@ -94,7 +94,7 @@ export function ClosingSlide({ step }: SlideProperties) {
 									{link.label}
 									<ExternalLink className="size-3.5 text-cf-text-subtle" />
 								</div>
-								<div className="text-sm text-cf-text-muted">{link.desc}</div>
+								<div className="text-base text-cf-text-muted">{link.desc}</div>
 							</a>
 						</Reveal>
 					))}

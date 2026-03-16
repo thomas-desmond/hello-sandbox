@@ -16,7 +16,7 @@ export function SlideLayout({ children, className = '', variant }: { children: R
 			<div className="pointer-events-none absolute inset-0 dot-pattern opacity-30" />
 			<div
 				className="
-					relative z-10 flex flex-1 flex-col overflow-hidden px-16 py-12 pb-20
+					relative z-10 flex flex-1 flex-col overflow-y-auto px-16 py-12 pb-20
 				"
 			>
 				{children}

@@ -19,7 +19,7 @@ export function BrowserFrame({
 	return (
 		<div
 			className="
-				overflow-hidden rounded-xl border border-cf-border shadow-lg
+				flex flex-col overflow-hidden rounded-xl border border-cf-border shadow-lg
 				shadow-cf-text/5
 			"
 		>
@@ -29,11 +29,10 @@ export function BrowserFrame({
 					flex items-center gap-3 border-b border-cf-border bg-cf-bg-200 px-4 py-2
 				"
 			>
-				{/* Traffic lights */}
 				<div className="flex gap-1.5">
-					<span className="size-3 rounded-full bg-[#ff5f57]" />
-					<span className="size-3 rounded-full bg-[#febc2e]" />
-					<span className="size-3 rounded-full bg-[#28c840]" />
+					<span className="size-2.5 rounded-full bg-cf-border" />
+					<span className="size-2.5 rounded-full bg-cf-border" />
+					<span className="size-2.5 rounded-full bg-cf-border" />
 				</div>
 				{/* URL bar */}
 				{url && (

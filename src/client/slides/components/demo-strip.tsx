@@ -130,8 +130,8 @@ export function DemoStrip({
 							transition={{ duration: 0.3, ease: EASE }}
 						>
 							<Badge variant={success === false ? 'error' : 'success'}>exit {exitCode}</Badge>
-							{lastCommand && <span className="font-mono text-sm text-cf-text-subtle">{lastCommand}</span>}
-							{duration !== undefined && <span className="text-sm text-cf-text-subtle">{duration}ms</span>}
+							{lastCommand && <span className="font-mono text-base text-cf-text-subtle">{lastCommand}</span>}
+							{duration !== undefined && <span className="text-base text-cf-text-subtle">{duration}ms</span>}
 						</motion.div>
 					)}
 				</AnimatePresence>

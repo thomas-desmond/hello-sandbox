@@ -162,15 +162,15 @@ export function WatchSlide({ step }: SlideProperties) {
 											<span className="relative inline-flex size-2.5 rounded-full bg-cf-success" />
 										</span>
 									)}
-									<span className="text-sm font-medium text-cf-text-subtle uppercase">Event Log</span>
+									<span className="text-base font-medium text-cf-text-subtle uppercase">Event Log</span>
 								</div>
-								<span className="font-mono text-xs text-cf-text-subtle">{events.length} events</span>
+								<span className="font-mono text-sm text-cf-text-subtle">{events.length} events</span>
 							</div>
 							<div className="flex-1 overflow-y-auto">
 								{events.length === 0 ? (
 									<div
 										className="
-											flex h-full items-center justify-center text-sm text-cf-text-subtle
+											flex h-full items-center justify-center text-base text-cf-text-subtle
 										"
 									>
 										Waiting for events... Click a trigger to generate them.
@@ -189,9 +189,9 @@ export function WatchSlide({ step }: SlideProperties) {
 												>
 													<div className="flex items-center gap-2">
 														<Badge variant={EVENT_BADGE[event_.eventType] ?? 'neutral'}>{event_.eventType}</Badge>
-														<span className="truncate font-mono text-sm">{event_.path}</span>
+														<span className="truncate font-mono text-base">{event_.path}</span>
 													</div>
-													<span className="text-[10px] text-cf-text-subtle">{event_.timestamp}</span>
+													<span className="text-sm text-cf-text-subtle">{event_.timestamp}</span>
 												</motion.div>
 											))}
 										</AnimatePresence>
@@ -200,13 +200,13 @@ export function WatchSlide({ step }: SlideProperties) {
 							</div>
 						</div>
 						<div className="flex w-[280px] shrink-0 flex-col gap-3">
-							<div className="text-sm font-medium text-cf-text-subtle uppercase">Trigger Changes</div>
+							<div className="text-base font-medium text-cf-text-subtle uppercase">Trigger Changes</div>
 							{TRIGGERS.map((t) => (
 								<button key={t.label} onClick={() => void runTrigger(t.cmd)} disabled={triggerLoading} className="btn-preset text-base">
 									{t.label}
 								</button>
 							))}
-							<Output className="min-h-[60px] text-sm">
+							<Output className="min-h-[60px] text-base">
 								{triggerLoading && <Dim>Running...</Dim>}
 								{!triggerLoading && triggerOutput && <Stdout>{triggerOutput}</Stdout>}
 								{!triggerLoading && !triggerOutput && <Dim>Trigger output appears here</Dim>}

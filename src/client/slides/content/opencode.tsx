@@ -81,7 +81,7 @@ export function OpencodeSlide({ step }: SlideProperties) {
 														/>
 													))}
 												</div>
-												<span className="text-sm text-surface-dark-text/80">Starting OpenCode...</span>
+												<span className="text-base text-surface-dark-text/80">Starting OpenCode...</span>
 											</div>
 										</motion.div>
 									)}
@@ -99,7 +99,7 @@ export function OpencodeSlide({ step }: SlideProperties) {
 								<button onClick={() => void launch()} disabled={loading} className="btn-base btn-primary text-base">
 									{loading ? 'Starting OpenCode...' : 'Launch OpenCode'}
 								</button>
-								{error && <span className="text-sm text-cf-error">{error}</span>}
+								{error && <span className="text-base text-cf-error">{error}</span>}
 							</div>
 						)}
 					</Reveal>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/badge';
 import { Callout } from '@/components/callout';
 import { CodeBlock } from '@/components/code-block';
+import { Markdown } from '@/components/markdown';
 import { Output, Stdout, Stderr, Dim } from '@/components/output';
 import { api } from '@/lib/api';
 
@@ -361,7 +362,7 @@ export function AIPanel() {
 									}}
 								>
 									<span className="font-medium text-cf-ai">AI Explanation: </span>
-									{result.explanation}
+									<Markdown>{result.explanation}</Markdown>
 								</motion.div>
 							)}
 						</motion.div>

@@ -32,11 +32,11 @@ const TERMINAL_THEME = {
 };
 
 const QUICK_CMDS = [
+	{ label: 'Cowsay', cmd: 'pip3 install cowsay -q && python3 -c \'import cowsay; cowsay.cow("Hello from Sandbox!")\'\r' },
 	{ label: 'System info', cmd: 'uname -a\r' },
 	{ label: 'Python', cmd: 'python3 --version\r' },
 	{ label: 'Node', cmd: 'node --version\r' },
 	{ label: 'Files', cmd: 'ls -la /workspace\r' },
-	{ label: 'Disk usage', cmd: 'df -h /\r' },
 ];
 
 /**
@@ -159,7 +159,7 @@ export function TerminalSlide({ step }: SlideProperties) {
 													/>
 												))}
 											</div>
-											<span className="text-sm text-surface-dark-text/80">Connecting to sandbox...</span>
+											<span className="text-base text-surface-dark-text/80">Connecting to sandbox...</span>
 										</div>
 									</motion.div>
 								)}

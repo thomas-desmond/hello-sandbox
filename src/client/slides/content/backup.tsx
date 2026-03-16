@@ -128,7 +128,7 @@ export function BackupSlide({ step }: SlideProperties) {
 												/>
 											)}
 											<div className="text-base font-semibold text-cf-text">{ws.label}</div>
-											<div className="text-sm text-cf-text-muted">{ws.desc}</div>
+											<div className="text-base text-cf-text-muted">{ws.desc}</div>
 										</div>
 									</Reveal>
 								</div>

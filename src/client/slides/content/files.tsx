@@ -123,7 +123,7 @@ export function FilesSlide({ step }: SlideProperties) {
 					<Reveal visible={step >= 1} className="flex w-[320px] shrink-0 flex-col overflow-hidden">
 						<div
 							className="
-								flex flex-col overflow-hidden rounded-xl border border-cf-border
+								flex flex-1 flex-col overflow-hidden rounded-xl border border-cf-border
 								bg-cf-bg-200
 							"
 						>
@@ -135,22 +135,22 @@ export function FilesSlide({ step }: SlideProperties) {
 							>
 								<span
 									className="
-										text-xs font-medium tracking-wider text-cf-text-subtle uppercase
+										text-sm font-medium tracking-wider text-cf-text-subtle uppercase
 									"
 								>
 									Files
 								</span>
-								<span className="truncate font-mono text-xs text-cf-text-subtle">{cwd}</span>
+								<span className="truncate font-mono text-sm text-cf-text-subtle">{cwd}</span>
 							</div>
 							<div className="flex-1 overflow-y-auto p-2">
-								{filesLoading && <div className="p-3 text-sm text-cf-text-subtle">Loading...</div>}
+								{filesLoading && <div className="p-3 text-base text-cf-text-subtle">Loading...</div>}
 								{!filesLoading && (
 									<div className="flex flex-col gap-0.5">
 										{parentDirectory && (
 											<button
 												onClick={() => void navigate(parentDirectory)}
 												className="
-													flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm
+													flex items-center gap-2 rounded-md px-3 py-2 text-left text-base
 													text-cf-text-muted transition-colors
 													hover:bg-cf-bg-300
 												"
@@ -172,7 +172,7 @@ export function FilesSlide({ step }: SlideProperties) {
 														transition={{ duration: 0.2 }}
 														onClick={() => (isDirectory ? void navigate(fullPath) : void readFile(fullPath))}
 														className={`
-															flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm
+															flex items-center gap-2 rounded-md px-3 py-2 text-left text-base
 															transition-colors
 															hover:bg-cf-bg-300
 															${selectedFile === fullPath ? 'bg-cf-orange/10 text-cf-orange' : 'text-cf-text'}
@@ -188,7 +188,7 @@ export function FilesSlide({ step }: SlideProperties) {
 												);
 											})}
 										</AnimatePresence>
-										{!filesLoading && files.length === 0 && <div className="px-3 py-2 text-sm text-cf-text-subtle">Empty directory</div>}
+										{!filesLoading && files.length === 0 && <div className="px-3 py-2 text-base text-cf-text-subtle">Empty directory</div>}
 									</div>
 								)}
 							</div>
@@ -210,16 +210,16 @@ export function FilesSlide({ step }: SlideProperties) {
 										value={writePath}
 										onChange={(event_) => setWritePath(event_.target.value)}
 										placeholder="File path..."
-										className="input-field flex-1 text-sm"
+										className="input-field flex-1 text-base"
 									/>
 									<input
 										type="text"
 										value={writeContent}
 										onChange={(event_) => setWriteContent(event_.target.value)}
 										placeholder="Content..."
-										className="input-field flex-1 text-sm"
+										className="input-field flex-1 text-base"
 									/>
-									<button onClick={writeFile} disabled={actionLoading} className="btn-base btn-primary text-sm whitespace-nowrap">
+									<button onClick={writeFile} disabled={actionLoading} className="btn-base btn-primary text-base whitespace-nowrap">
 										Write
 									</button>
 								</div>
@@ -230,9 +230,9 @@ export function FilesSlide({ step }: SlideProperties) {
 										value={mkdirPath}
 										onChange={(event_) => setMkdirPath(event_.target.value)}
 										placeholder="Directory path..."
-										className="input-field flex-1 text-sm"
+										className="input-field flex-1 text-base"
 									/>
-									<button onClick={mkdir} disabled={actionLoading} className="btn-base btn-ghost text-sm whitespace-nowrap">
+									<button onClick={mkdir} disabled={actionLoading} className="btn-base btn-ghost text-base whitespace-nowrap">
 										mkdir
 									</button>
 								</div>
