@@ -2,7 +2,7 @@
 	"$schema": "https://unpkg.com/knip@5/schema.json",
 	"ignoreExportsUsedInFile": { "interface": true, "type": true },
 	"entry": ["src/client/main.tsx!", "src/index.ts!"],
-	"ignoreDependencies": ["cloudflare"],
+	"ignoreDependencies": ["cloudflare", "@opencode-ai/sdk"],
 	"ignoreBinaries": ["wrangler"],
 	"ignoreFiles": ["worker-configuration.d.ts"]
 }
