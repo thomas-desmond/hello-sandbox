@@ -13,8 +13,8 @@
 	--color-cf-orange-light: oklch(from #ff4801 l c h / 8%);
 
 	--color-cf-text: #521000;
-	--color-cf-text-muted: oklch(from #521000 l c h / 60%);
-	--color-cf-text-subtle: oklch(from #521000 l c h / 38%);
+	--color-cf-text-muted: oklch(from #521000 l c h / 78%);
+	--color-cf-text-subtle: oklch(from #521000 l c h / 56%);
 
 	--color-cf-bg-page: #f5f1eb;
 	--color-cf-bg-100: #fffbf5;
