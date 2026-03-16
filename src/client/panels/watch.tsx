@@ -5,6 +5,7 @@ import { Badge } from '@/components/badge';
 import { Callout } from '@/components/callout';
 import { Card, CardHeader, CardBody } from '@/components/card';
 import { CodeBlock } from '@/components/code-block';
+import { FileTree } from '@/components/file-tree';
 import { Output, Stdout } from '@/components/output';
 import { api } from '@/lib/api';
 
@@ -66,6 +67,7 @@ export function WatchPanel() {
 	const [triggerCommand, setTriggerCommand] = useState('');
 	const [triggerOutput, setTriggerOutput] = useState<string | undefined>();
 	const [triggerLoading, setTriggerLoading] = useState(false);
+	const [fileRefreshKey, setFileRefreshKey] = useState(0);
 	const eventSourceReference = useRef<EventSource | undefined>(undefined);
 	const eventIdReference = useRef(0);
 
@@ -126,6 +128,8 @@ export function WatchPanel() {
 			} else {
 				setTriggerOutput(data.success ? `Done (exit ${data.exitCode})` : `Failed (exit ${data.exitCode})`);
 			}
+			// Refresh file tree after trigger
+			setFileRefreshKey((k) => k + 1);
 		} catch (error) {
 			setTriggerOutput(`Error: ${error instanceof Error ? error.message : 'Command failed'}`);
 		} finally {
@@ -223,10 +227,13 @@ export function WatchPanel() {
 				<div
 					className="
 						grid grid-cols-1 gap-4
-						lg:grid-cols-2
+						lg:grid-cols-[240px_1fr_1fr]
 					"
 				>
-					{/* Left: Event log */}
+					{/* Left: File tree */}
+					<FileTree initialPath={watchPath} refreshKey={fileRefreshKey} className="max-h-[400px]" compact />
+
+					{/* Center: Event log */}
 					<Card>
 						<CardHeader right={<span className="font-mono text-[11px]">{events.length} events</span>}>Event Log</CardHeader>
 						<CardBody className="max-h-[350px] p-0">

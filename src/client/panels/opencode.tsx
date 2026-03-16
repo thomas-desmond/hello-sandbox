@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 
+import { BrowserFrame } from '@/components/browser-frame';
 import { Callout } from '@/components/callout';
 import { CodeBlock } from '@/components/code-block';
 
@@ -70,20 +71,10 @@ export function OpencodePanel() {
 
 			{iframeUrl ? (
 				<div className="flex flex-col gap-2">
-					<div className="flex items-center justify-between">
-						<button onClick={() => setIframeUrl(undefined)} className="btn-base btn-ghost">
-							Stop
-						</button>
-						<a href={iframeUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-cf-orange hover:underline">
-							Open in new tab
-						</a>
-					</div>
-					<div
-						className="
-							relative overflow-hidden rounded-lg border border-cf-border
-							bg-surface-dark
-						"
-					>
+					<button onClick={() => setIframeUrl(undefined)} className="btn-base w-fit btn-ghost">
+						Stop
+					</button>
+					<BrowserFrame url={iframeUrl} className="relative">
 						<AnimatePresence>
 							{loading && (
 								<motion.div
@@ -107,7 +98,7 @@ export function OpencodePanel() {
 							title="OpenCode"
 							allow="clipboard-read; clipboard-write"
 						/>
-					</div>
+					</BrowserFrame>
 				</div>
 			) : (
 				<div className="flex items-center gap-3">
@@ -123,8 +114,7 @@ export function OpencodePanel() {
 					OpenCode
 				</a>{' '}
 				is an open-source AI coding agent that runs in your terminal or browser. The Sandbox SDK provides a dedicated <code>-opencode</code>{' '}
-				base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker. It uses built-in free
-				models by default — no API keys required.
+				base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker.
 			</Callout>
 		</section>
 	);

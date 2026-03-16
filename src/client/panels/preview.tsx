@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Badge } from '@/components/badge';
+import { BrowserFrame } from '@/components/browser-frame';
 import { Callout } from '@/components/callout';
 import { CodeBlock } from '@/components/code-block';
 import { Output, Stdout, Stderr, Info } from '@/components/output';
@@ -140,24 +141,15 @@ export function PreviewPanel() {
 				{/* Preview iframe */}
 				{previewUrl && (
 					<div className="flex flex-col gap-2">
-						<div className="flex items-center justify-between">
-							<Badge variant="success">Live Preview</Badge>
-							<a href={previewUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-cf-orange hover:underline">
-								Open in new tab &rarr;
-							</a>
-						</div>
-						<div
-							className="
-								overflow-hidden rounded-lg border border-cf-border bg-cf-bg-100
-							"
-						>
+						<Badge variant="success">Live Preview</Badge>
+						<BrowserFrame url={previewUrl}>
 							<iframe
 								src={previewUrl}
 								title="Sandbox preview"
 								className="h-[400px] w-full border-0"
 								sandbox="allow-scripts allow-same-origin allow-forms"
 							/>
-						</div>
+						</BrowserFrame>
 					</div>
 				)}
 

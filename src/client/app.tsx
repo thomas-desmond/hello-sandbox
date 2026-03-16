@@ -12,6 +12,7 @@ import { OpencodePanel } from './panels/opencode';
 import { PreviewPanel } from './panels/preview';
 import { TerminalPanel } from './panels/terminal';
 import { WatchPanel } from './panels/watch';
+import { SlidesMode } from './slides';
 
 import type { LucideProps } from 'lucide-react';
 
@@ -40,7 +41,26 @@ function getInitialPanel(): string {
 	return PANELS[0].id;
 }
 
+function isSlidesMode(): boolean {
+	return new URLSearchParams(globalThis.location.search).get('mode') === 'slides';
+}
+
 export function App() {
+	const [slidesMode, setSlidesMode] = useState(isSlidesMode);
+
+	// Listen for popstate (triggered by slides exit)
+	useEffect(() => {
+		const onPopState = () => setSlidesMode(isSlidesMode());
+		globalThis.addEventListener('popstate', onPopState);
+		return () => globalThis.removeEventListener('popstate', onPopState);
+	}, []);
+
+	if (slidesMode) return <SlidesMode />;
+
+	return <Explorer />;
+}
+
+function Explorer() {
 	const [activePanel, setActivePanel] = useState(getInitialPanel);
 
 	useEffect(() => {
