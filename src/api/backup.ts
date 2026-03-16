@@ -38,12 +38,18 @@ function parseBackupError(error: unknown): { error: string; code?: string; missi
 	return { error: message };
 }
 
+/** Scope a backup name under the current sandbox ID to isolate backups per sandbox in R2. */
+function scopedName(sandboxId: string, name: string): string {
+	return `${sandboxId}/${name}`;
+}
+
 app.post('/create', async (c) => {
 	const { dir, name } = await c.req.json<{ dir?: string; name?: string }>();
+	const sandboxId = c.get('sandboxId');
 	try {
 		const backup = await sandbox(c).createBackup({
 			dir: dir || '/workspace',
-			name: name || 'demo-checkpoint',
+			name: scopedName(sandboxId, name || 'demo-checkpoint'),
 		});
 		return c.json({ success: true, backup: { id: backup.id, dir: backup.dir } });
 	} catch (error) {

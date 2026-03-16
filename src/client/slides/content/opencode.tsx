@@ -57,7 +57,7 @@ export function OpencodeSlide({ step }: SlideProperties) {
 				{step >= 2 && (
 					<Reveal visible={step >= 2} className="flex flex-1 flex-col gap-3 overflow-hidden">
 						{iframeUrl ? (
-							<BrowserFrame url={iframeUrl} className="relative flex-1">
+							<BrowserFrame url={iframeUrl} className="relative" containerClassName="min-h-0 flex-1">
 								<AnimatePresence>
 									{loading && (
 										<motion.div
@@ -88,7 +88,7 @@ export function OpencodeSlide({ step }: SlideProperties) {
 								</AnimatePresence>
 								<iframe
 									src={iframeUrl}
-									className="size-full border-0"
+									className="w-full flex-1 border-0"
 									onLoad={() => setLoading(false)}
 									title="OpenCode"
 									allow="clipboard-read; clipboard-write"

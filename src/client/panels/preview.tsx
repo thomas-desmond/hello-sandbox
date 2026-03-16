@@ -146,7 +146,7 @@ export function PreviewPanel() {
 							<iframe
 								src={previewUrl}
 								title="Sandbox preview"
-								className="h-[400px] w-full border-0"
+								className="min-h-[400px] w-full flex-1 border-0"
 								sandbox="allow-scripts allow-same-origin allow-forms"
 							/>
 						</BrowserFrame>

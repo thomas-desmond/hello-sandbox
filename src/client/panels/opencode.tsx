@@ -56,13 +56,53 @@ export function OpencodePanel() {
 		}
 	}
 
+	if (iframeUrl) {
+		// Full-bleed layout: fixed positioning fills the main content area
+		// (sidebar is 240px, status bar is 40px, this sits on top of the scrollable area)
+		return (
+			<div
+				className="
+					fixed inset-0 bottom-[40px] left-[240px] z-20 flex flex-col gap-2
+					bg-cf-bg-100 p-3
+				"
+			>
+				<div className="flex shrink-0 items-center gap-3">
+					<button onClick={() => setIframeUrl(undefined)} className="btn-base btn-ghost">
+						Stop
+					</button>
+					<h2 className="text-sm font-medium text-cf-text">AI Coding Agents</h2>
+				</div>
+				<BrowserFrame url={iframeUrl} className="relative" containerClassName="min-h-0 min-w-0 flex-1">
+					<AnimatePresence>
+						{loading && (
+							<motion.div
+								className="
+									absolute inset-0 z-10 flex flex-col items-center justify-center gap-4
+									bg-surface-dark/95 backdrop-blur-sm
+								"
+								initial={{ opacity: 1 }}
+								exit={{ opacity: 0 }}
+								transition={{ duration: 0.5, ease: 'easeOut' }}
+							>
+								<ConnectingBars />
+								<span className="text-sm font-medium text-surface-dark-text/80">Starting OpenCode...</span>
+							</motion.div>
+						)}
+					</AnimatePresence>
+					<iframe
+						src={iframeUrl}
+						className="min-h-[300px] w-full min-w-[400px] flex-1 border-0"
+						onLoad={() => setLoading(false)}
+						title="OpenCode"
+						allow="clipboard-read; clipboard-write"
+					/>
+				</BrowserFrame>
+			</div>
+		);
+	}
+
 	return (
-		<section
-			className={`
-				flex flex-col gap-6
-				${iframeUrl ? 'h-[calc(100vh-40px-36px-36px)]' : ''}
-			`}
-		>
+		<section className="flex flex-col gap-6">
 			<div>
 				<h2 className="font-sans text-2xl font-medium text-cf-text">AI Coding Agents</h2>
 				<p className="mt-1 text-base text-cf-text-muted">
@@ -71,63 +111,23 @@ export function OpencodePanel() {
 				</p>
 			</div>
 
-			{!iframeUrl && (
-				<>
-					<CodeBlock code={SDK_CODE} label="WORKER CODE" />
-					<CodeBlock code={DOCKERFILE_CODE} label="DOCKERFILE" />
-				</>
-			)}
+			<CodeBlock code={SDK_CODE} label="WORKER CODE" />
+			<CodeBlock code={DOCKERFILE_CODE} label="DOCKERFILE" />
 
-			{iframeUrl ? (
-				<div className="flex min-h-0 flex-1 flex-col gap-2">
-					<button onClick={() => setIframeUrl(undefined)} className="btn-base w-fit shrink-0 btn-ghost">
-						Stop
-					</button>
-					<BrowserFrame url={iframeUrl} className="relative" containerClassName="min-h-0 flex-1">
-						<AnimatePresence>
-							{loading && (
-								<motion.div
-									className="
-										absolute inset-0 z-10 flex flex-col items-center justify-center gap-4
-										bg-surface-dark/95 backdrop-blur-sm
-									"
-									initial={{ opacity: 1 }}
-									exit={{ opacity: 0 }}
-									transition={{ duration: 0.5, ease: 'easeOut' }}
-								>
-									<ConnectingBars />
-									<span className="text-sm font-medium text-surface-dark-text/80">Starting OpenCode...</span>
-								</motion.div>
-							)}
-						</AnimatePresence>
-						<iframe
-							src={iframeUrl}
-							className="min-h-[400px] min-w-[600px] border-0"
-							style={{ width: '100%', height: '100%' }}
-							onLoad={() => setLoading(false)}
-							title="OpenCode"
-							allow="clipboard-read; clipboard-write"
-						/>
-					</BrowserFrame>
-				</div>
-			) : (
-				<div className="flex items-center gap-3">
-					<button onClick={() => void launch()} disabled={loading} className="btn-base btn-primary">
-						{loading ? 'Starting...' : 'Launch OpenCode'}
-					</button>
-					{error && <span className="text-sm text-cf-error">{error}</span>}
-				</div>
-			)}
+			<div className="flex items-center gap-3">
+				<button onClick={() => void launch()} disabled={loading} className="btn-base btn-primary">
+					{loading ? 'Starting...' : 'Launch OpenCode'}
+				</button>
+				{error && <span className="text-sm text-cf-error">{error}</span>}
+			</div>
 
-			{!iframeUrl && (
-				<Callout>
-					<a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
-						OpenCode
-					</a>{' '}
-					is an open-source AI coding agent that runs in your terminal or browser. The Sandbox SDK provides a dedicated{' '}
-					<code>-opencode</code> base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker.
-				</Callout>
-			)}
+			<Callout>
+				<a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
+					OpenCode
+				</a>{' '}
+				is an open-source AI coding agent that runs in your terminal or browser. The Sandbox SDK provides a dedicated <code>-opencode</code>{' '}
+				base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker.
+			</Callout>
 		</section>
 	);
 }

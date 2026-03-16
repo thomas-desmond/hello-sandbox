@@ -124,11 +124,11 @@ export function PreviewSlide({ step }: SlideProperties) {
 							{previewUrl && (
 								<div className="flex flex-col gap-2">
 									<Badge variant="success">Live Preview</Badge>
-									<BrowserFrame url={previewUrl}>
+									<BrowserFrame url={previewUrl} containerClassName="min-h-0 flex-1">
 										<iframe
 											src={previewUrl}
 											title="Sandbox preview"
-											className="h-[280px] w-full border-0"
+											className="min-h-[280px] w-full flex-1 border-0"
 											sandbox="allow-scripts allow-same-origin allow-forms"
 										/>
 									</BrowserFrame>
