@@ -115,7 +115,7 @@ export function SetupSlide({ step }: SlideProperties) {
 
 				{/* Right: Active code block */}
 				<div className="flex min-w-0 flex-1 flex-col gap-3 pt-2">
-					<RevealCode code={activeStep.code} visible label={activeStep.file} />
+					<RevealCode key={activeStep.file} code={activeStep.code} visible label={activeStep.file} />
 				</div>
 			</div>
 		</SlideLayout>
