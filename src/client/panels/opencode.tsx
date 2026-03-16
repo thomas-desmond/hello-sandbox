@@ -57,24 +57,33 @@ export function OpencodePanel() {
 	}
 
 	return (
-		<section className="flex flex-col gap-6">
+		<section
+			className={`
+				flex flex-col gap-6
+				${iframeUrl ? 'h-[calc(100vh-40px-36px-36px)]' : ''}
+			`}
+		>
 			<div>
-				<h2 className="font-sans text-2xl font-medium text-cf-text">OpenCode</h2>
+				<h2 className="font-sans text-2xl font-medium text-cf-text">AI Coding Agents</h2>
 				<p className="mt-1 text-base text-cf-text-muted">
 					Run the full OpenCode web experience inside a Cloudflare Sandbox. A second container with the official <code>-opencode</code> base
 					image runs the OpenCode server, exposed via a preview URL and embedded here.
 				</p>
 			</div>
 
-			<CodeBlock code={SDK_CODE} label="WORKER CODE" />
-			<CodeBlock code={DOCKERFILE_CODE} label="DOCKERFILE" />
+			{!iframeUrl && (
+				<>
+					<CodeBlock code={SDK_CODE} label="WORKER CODE" />
+					<CodeBlock code={DOCKERFILE_CODE} label="DOCKERFILE" />
+				</>
+			)}
 
 			{iframeUrl ? (
-				<div className="flex flex-col gap-2">
-					<button onClick={() => setIframeUrl(undefined)} className="btn-base w-fit btn-ghost">
+				<div className="flex min-h-0 flex-1 flex-col gap-2">
+					<button onClick={() => setIframeUrl(undefined)} className="btn-base w-fit shrink-0 btn-ghost">
 						Stop
 					</button>
-					<BrowserFrame url={iframeUrl} className="relative">
+					<BrowserFrame url={iframeUrl} className="relative" containerClassName="min-h-0 flex-1">
 						<AnimatePresence>
 							{loading && (
 								<motion.div
@@ -93,7 +102,8 @@ export function OpencodePanel() {
 						</AnimatePresence>
 						<iframe
 							src={iframeUrl}
-							className="h-[700px] w-full border-0"
+							className="min-h-[400px] min-w-[600px] border-0"
+							style={{ width: '100%', height: '100%' }}
 							onLoad={() => setLoading(false)}
 							title="OpenCode"
 							allow="clipboard-read; clipboard-write"
@@ -109,13 +119,15 @@ export function OpencodePanel() {
 				</div>
 			)}
 
-			<Callout>
-				<a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
-					OpenCode
-				</a>{' '}
-				is an open-source AI coding agent that runs in your terminal or browser. The Sandbox SDK provides a dedicated <code>-opencode</code>{' '}
-				base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker.
-			</Callout>
+			{!iframeUrl && (
+				<Callout>
+					<a href="https://opencode.ai" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline">
+						OpenCode
+					</a>{' '}
+					is an open-source AI coding agent that runs in your terminal or browser. The Sandbox SDK provides a dedicated{' '}
+					<code>-opencode</code> base image with the CLI pre-installed, and helpers to start and proxy the OpenCode server from a Worker.
+				</Callout>
+			)}
 		</section>
 	);
 }

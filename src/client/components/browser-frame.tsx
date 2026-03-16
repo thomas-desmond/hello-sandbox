@@ -8,20 +8,24 @@ export function BrowserFrame({
 	url,
 	children,
 	className = '',
+	containerClassName = '',
 	onOpenExternal,
 }: {
 	url?: string;
 	children: ReactNode;
 	className?: string;
+	/** Extra classes applied to the outermost wrapper (e.g. flex-1 min-h-0) */
+	containerClassName?: string;
 	/** If provided, the external-link icon in the toolbar calls this instead of using an anchor */
 	onOpenExternal?: () => void;
 }) {
 	return (
 		<div
-			className="
+			className={`
 				flex flex-col overflow-hidden rounded-xl border border-cf-border shadow-lg
 				shadow-cf-text/5
-			"
+				${containerClassName}
+			`}
 		>
 			{/* Toolbar */}
 			<div
@@ -72,7 +76,14 @@ export function BrowserFrame({
 					))}
 			</div>
 			{/* Content */}
-			<div className={className}>{children}</div>
+			<div
+				className={`
+					min-h-0 flex-1
+					${className}
+				`}
+			>
+				{children}
+			</div>
 		</div>
 	);
 }
