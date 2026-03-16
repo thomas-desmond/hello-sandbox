@@ -2,13 +2,13 @@ import { Hono } from 'hono';
 
 import { sandbox } from './sandbox';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 app.post('/', async (c) => {
 	const { command } = await c.req.json<{ command: string }>();
 	if (!command) return c.json({ error: 'command is required' }, 400);
 
-	const sb = sandbox(c.env);
+	const sb = sandbox(c);
 	const result = await sb.exec(command);
 
 	return c.json({

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 import { sandbox } from './sandbox';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 /** Check if the BACKUP_BUCKET R2 binding exists in the environment. */
 function isBackupConfigured(environment: Env): boolean {
@@ -41,7 +41,7 @@ function parseBackupError(error: unknown): { error: string; code?: string; missi
 app.post('/create', async (c) => {
 	const { dir, name } = await c.req.json<{ dir?: string; name?: string }>();
 	try {
-		const backup = await sandbox(c.env).createBackup({
+		const backup = await sandbox(c).createBackup({
 			dir: dir || '/workspace',
 			name: name || 'demo-checkpoint',
 		});
@@ -59,7 +59,7 @@ app.post('/restore', async (c) => {
 	if (!backup) return c.json({ error: 'backup handle is required' }, 400);
 
 	try {
-		const result = await sandbox(c.env).restoreBackup(backup);
+		const result = await sandbox(c).restoreBackup(backup);
 		return c.json({ success: result.success, dir: result.dir, id: result.id });
 	} catch (error) {
 		const parsed = parseBackupError(error);

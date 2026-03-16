@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 
 import { ErrorBoundary } from './components/error-boundary';
+import { useSandboxId } from './lib/use-sandbox-id';
 import { AIPanel } from './panels/ai';
 import { BackupPanel } from './panels/backup';
 import { CommandsPanel } from './panels/commands';
@@ -62,6 +63,7 @@ export function App() {
 
 function Explorer() {
 	const [activePanel, setActivePanel] = useState(getInitialPanel);
+	const sandboxId = useSandboxId();
 
 	useEffect(() => {
 		const onHash = () => {
@@ -192,7 +194,7 @@ function Explorer() {
 					sandbox ready
 				</div>
 				<div className="flex items-center gap-3">
-					<span className="text-cf-orange/70">demo-sandbox</span>
+					<span className="text-cf-orange/70">{sandboxId ?? 'connecting...'}</span>
 					<button
 						onClick={() => {
 							const url = new URL(globalThis.location.href);

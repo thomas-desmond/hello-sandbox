@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 import { sandbox } from './sandbox';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 // SSE stream — consumed via EventSource on the client.
 // sandbox.watch() returns a ReadableStream<Uint8Array> in standard SSE format.
@@ -12,7 +12,7 @@ app.get('/', async (c) => {
 	const includeRaw = c.req.query('include');
 	const include = includeRaw ? includeRaw.split(',').map((s) => s.trim()) : undefined;
 
-	const sb = sandbox(c.env);
+	const sb = sandbox(c);
 
 	// Ensure directory exists
 	const exists = await sb.exists(path);

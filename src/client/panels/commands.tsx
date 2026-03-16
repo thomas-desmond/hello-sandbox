@@ -16,7 +16,7 @@ interface ExecResult {
 	duration: number;
 }
 
-const SDK_CODE = `const sandbox = getSandbox(env.Sandbox, 'demo-sandbox');
+const SDK_CODE = `const sandbox = getSandbox(env.Sandbox, sandboxId);
 const result = await sandbox.exec('python3 --version');
 // result: { stdout, stderr, exitCode, success, command, duration }`;
 

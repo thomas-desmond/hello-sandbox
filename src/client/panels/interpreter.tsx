@@ -200,6 +200,11 @@ export function InterpreterPanel() {
 
 	function loadPreset(key: string) {
 		setCode(PRESETS[key][language]);
+		// Reset context so the preset starts with a clean execution environment.
+		// This prevents "already declared" errors when re-running JS snippets
+		// that use top-level let/const declarations.
+		setContextId(undefined);
+		setResult(undefined);
 	}
 
 	return (

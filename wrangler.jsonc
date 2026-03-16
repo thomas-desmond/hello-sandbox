@@ -15,12 +15,18 @@
 		"run_worker_first": true,
 		"binding": "ASSETS",
 	},
+	"r2_buckets": [
+		{
+			"binding": "BACKUP_BUCKET",
+			"bucket_name": "hello-sandbox-backup",
+		},
+	],
 	"containers": [
 		{
 			"class_name": "Sandbox",
 			"image": "./Dockerfile",
 			"instance_type": "lite",
-			"max_instances": 1,
+			"max_instances": 100,
 		},
 		{
 			"class_name": "OpencodeSandbox",

@@ -12,7 +12,7 @@ import interpreter from './interpreter';
 import preview from './preview';
 import watch from './watch';
 
-const api = new Hono<{ Bindings: Env }>();
+const api = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 api.use('/*', cors());
 
@@ -25,10 +25,10 @@ api.route('/preview', preview);
 api.route('/watch', watch);
 api.route('/backup', backup);
 
-// Health / status
+// Health / status — returns the per-user sandbox ID
 api.get('/status', (c) =>
 	c.json({
-		sandbox: 'demo-sandbox',
+		sandbox: c.get('sandboxId'),
 		status: 'ready',
 		features: ['exec', 'files', 'code-interpreter', 'ai', 'terminal', 'preview', 'watch', 'backup'],
 	}),

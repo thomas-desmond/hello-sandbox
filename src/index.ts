@@ -1,6 +1,7 @@
 import { getSandbox, proxyToSandbox } from '@cloudflare/sandbox';
 import { createOpencodeServer } from '@cloudflare/sandbox/opencode';
 import { Hono } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
 
 import api from './api';
 
@@ -8,7 +9,26 @@ import api from './api';
 export { Sandbox } from '@cloudflare/sandbox';
 export { Sandbox as OpencodeSandbox } from '@cloudflare/sandbox';
 
-const app = new Hono<{ Bindings: Env }>();
+const COOKIE_NAME = 'sandbox_id';
+
+const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
+
+// Assign a unique sandbox ID per user via a persistent cookie.
+// If no cookie is present, generate a new UUID and set it.
+app.use('*', async (c, next) => {
+	let sandboxId = getCookie(c, COOKIE_NAME);
+	if (!sandboxId) {
+		sandboxId = crypto.randomUUID();
+		setCookie(c, COOKIE_NAME, sandboxId, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'Lax',
+			maxAge: 60 * 60 * 24 * 365, // 1 year
+		});
+	}
+	c.set('sandboxId', sandboxId);
+	return next();
+});
 
 // Route preview-URL requests to the correct sandbox binding.
 // Both Sandbox and OpencodeSandbox use the same Sandbox class, so proxyToSandbox
@@ -36,9 +56,10 @@ app.get('/ws/terminal', async (c) => {
 	if (c.req.header('Upgrade') !== 'websocket') {
 		return c.text('WebSocket upgrade required', 426);
 	}
+	const sandboxId = c.get('sandboxId');
 	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-explicit-any -- sandbox proxy typing not available
-	const sandbox = getSandbox(c.env.Sandbox, 'demo-sandbox') as any;
-	return await sandbox.terminal(c.req.raw, { cols: 120, rows: 30 });
+	const sb = getSandbox(c.env.Sandbox, sandboxId) as any;
+	return await sb.terminal(c.req.raw, { cols: 120, rows: 30 });
 });
 
 // OpenCode: start the server, expose its port, return the preview URL for iframe embedding
@@ -46,6 +67,15 @@ app.get('/api/opencode/start', async (c) => {
 	// Use .host (includes port) so the SDK constructs correct local dev URLs
 	const hostname = new URL(c.req.url).host;
 	const sandbox = getSandbox(c.env.OpencodeSandbox, 'opencode');
+
+	// Clone the agents repo into the working directory if it doesn't exist yet
+	const { exists } = await sandbox.exists('/home/user/agents');
+	if (!exists) {
+		await sandbox.gitCheckout('https://github.com/cloudflare/agents', {
+			targetDir: '/home/user/agents',
+			depth: 1,
+		});
+	}
 
 	const server = await createOpencodeServer(sandbox, {
 		directory: '/home/user/agents',

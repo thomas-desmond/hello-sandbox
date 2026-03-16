@@ -7,7 +7,7 @@ import { sandbox } from './sandbox';
 
 const MODEL = '@cf/openai/gpt-oss-120b' as const;
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 /**
  * Attempt to extract Python code from the model's text response.
@@ -43,7 +43,7 @@ app.post('/', async (c) => {
 	const { prompt } = await c.req.json<{ prompt: string }>();
 	if (!prompt) return c.json({ error: 'prompt is required' }, 400);
 
-	const sb = sandbox(c.env);
+	const sb = sandbox(c);
 	const workersai = createWorkersAI({ binding: c.env.AI });
 
 	let executedCode = '';

@@ -1,10 +1,11 @@
 /**
- * Shared sandbox accessor — single source of truth for the sandbox ID
+ * Shared sandbox accessor — resolves the per-user sandbox from Hono context
  */
 import { getSandbox } from '@cloudflare/sandbox';
 
-const SANDBOX_ID = 'demo-sandbox';
+import type { Context } from 'hono';
 
-export function sandbox(environment: Env) {
-	return getSandbox(environment.Sandbox, SANDBOX_ID);
+export function sandbox(c: Context<{ Bindings: Env; Variables: { sandboxId: string } }>) {
+	const sandboxId = c.get('sandboxId');
+	return getSandbox(c.env.Sandbox, sandboxId);
 }

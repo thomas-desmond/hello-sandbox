@@ -2,14 +2,14 @@ import { Hono } from 'hono';
 
 import { sandbox } from './sandbox';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 app.post('/start', async (c) => {
 	const { command, port: portRaw } = await c.req.json<{
 		command?: string;
 		port?: number;
 	}>();
-	const sb = sandbox(c.env);
+	const sb = sandbox(c);
 	// Use .host (includes port) so the SDK can construct correct local dev URLs
 	const hostname = new URL(c.req.url).host;
 	const cmd = command || 'python3 -m http.server 8080';
@@ -38,19 +38,19 @@ app.post('/start', async (c) => {
 
 app.post('/stop', async (c) => {
 	const { port } = await c.req.json<{ port?: number }>();
-	await sandbox(c.env).unexposePort(port || 8080);
+	await sandbox(c).unexposePort(port || 8080);
 	return c.json({ success: true });
 });
 
 app.post('/list', async (c) => {
 	const hostname = new URL(c.req.url).host;
-	const ports = await sandbox(c.env).getExposedPorts(hostname);
+	const ports = await sandbox(c).getExposedPorts(hostname);
 	return c.json({ ports });
 });
 
 export default app;
 
-// ── Demo page served from inside the container ──────────────────────
+// -- Demo page served from inside the container --
 function getDemoHTML(): string {
 	return `<!DOCTYPE html>
 <html lang="en">

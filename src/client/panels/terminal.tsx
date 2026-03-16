@@ -3,11 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 
 import { Callout } from '@/components/callout';
 import { CodeBlock } from '@/components/code-block';
+import { useSandboxId } from '@/lib/use-sandbox-id';
 
 import type { Terminal as XTerminal } from '@xterm/xterm';
 
 const SDK_CODE = `app.get('/ws/terminal', async (c) => {
-  const sandbox = getSandbox(c.env.Sandbox, 'demo-sandbox');
+  const sandbox = getSandbox(c.env.Sandbox, sandboxId);
   return await sandbox.terminal(c.req.raw, { cols: 120, rows: 30 });
 });
 // Browser: SandboxAddon + xterm.js`;
@@ -111,10 +112,11 @@ export function TerminalPanel() {
 	const containerReference = useRef<HTMLDivElement>(null);
 	const terminalReference = useRef<XTerminal | undefined>(undefined);
 	const [connected, setConnected] = useState(false);
+	const sandboxId = useSandboxId();
 
 	useEffect(() => {
 		const container = containerReference.current;
-		if (!container) return;
+		if (!container || !sandboxId) return;
 
 		let disposed = false;
 		let terminal: XTerminal | undefined;
@@ -166,7 +168,7 @@ export function TerminalPanel() {
 			terminalReference.current = terminal;
 
 			// SandboxAddon requires an explicit connect() call to open the WebSocket
-			sandboxAddon.connect({ sandboxId: 'demo-sandbox' });
+			sandboxAddon.connect({ sandboxId });
 
 			resizeObserver = new ResizeObserver(() => {
 				fitAddon.fit();
@@ -183,7 +185,7 @@ export function TerminalPanel() {
 			terminalReference.current = undefined;
 			setConnected(false);
 		};
-	}, []);
+	}, [sandboxId]);
 
 	function sendCommand(command: string) {
 		if (terminalReference.current) {
