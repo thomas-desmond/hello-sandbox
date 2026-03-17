@@ -62,7 +62,7 @@ function ConnectingAnimation() {
 	return (
 		<div className="flex flex-col items-center gap-4">
 			{/* Signal wave animation */}
-			<div className="flex items-end gap-[3px]">
+			<div className="flex h-6 items-end gap-[3px]">
 				{[0, 1, 2, 3, 4].map((index) => (
 					<motion.div
 						key={index}
@@ -84,25 +84,6 @@ function ConnectingAnimation() {
 
 			<div className="flex flex-col items-center gap-1.5">
 				<span className="text-sm font-medium text-surface-dark-text/80">Connecting to sandbox</span>
-				{/* Animated dots */}
-				<div className="flex gap-1.5">
-					{[0, 1, 2].map((index) => (
-						<motion.div
-							key={index}
-							className="size-1 rounded-full bg-cf-orange"
-							animate={{
-								scale: [0.5, 1.3, 0.5],
-								opacity: [0.2, 1, 0.2],
-							}}
-							transition={{
-								duration: 1.2,
-								repeat: Infinity,
-								delay: index * 0.25,
-								ease: 'easeInOut',
-							}}
-						/>
-					))}
-				</div>
 			</div>
 		</div>
 	);

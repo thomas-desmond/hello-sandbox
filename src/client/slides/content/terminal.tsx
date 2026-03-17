@@ -148,7 +148,7 @@ export function TerminalSlide({ step }: SlideProperties) {
 										transition={{ duration: 0.5 }}
 									>
 										<div className="flex flex-col items-center gap-3">
-											<div className="flex items-end gap-[3px]">
+											<div className="flex h-6 items-end gap-[3px]">
 												{[0, 1, 2, 3, 4].map((index) => (
 													<motion.div
 														key={index}

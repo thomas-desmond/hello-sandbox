@@ -13,7 +13,7 @@
 		"typecheck": "tsc -b",
 		"lint": "prettier --check . && eslint --cache --format=stylish .",
 		"format": "prettier --write . && eslint --cache --format=stylish --fix .",
-		"knip": "knip --production",
+		"knip": "knip",
 		"prepare": "husky"
 	},
 	"dependencies": {

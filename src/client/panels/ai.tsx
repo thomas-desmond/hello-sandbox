@@ -163,22 +163,6 @@ function AILoadingState() {
 
 				<div className="flex flex-col items-center gap-1.5">
 					<span className="text-sm font-medium text-cf-ai">AI is thinking...</span>
-					{/* Animated dots */}
-					<div className="flex gap-1">
-						{[0, 1, 2].map((index) => (
-							<motion.div
-								key={index}
-								className="size-1 rounded-full bg-cf-ai/60"
-								animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
-								transition={{
-									duration: 1,
-									repeat: Infinity,
-									delay: index * 0.2,
-									ease: 'easeInOut',
-								}}
-							/>
-						))}
-					</div>
 				</div>
 			</div>
 		</motion.div>
