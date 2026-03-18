@@ -1,7 +1,9 @@
+import { Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
 
 import { BrowserFrame } from '@/components/browser-frame';
+import { highlightCode } from '@/lib/highlight';
 
 import { Reveal } from '../components/reveal';
 import { SlideLayout } from '../components/slide-layout';
@@ -52,7 +54,58 @@ export function OpencodeSlide({ step }: SlideProperties) {
 			/>
 
 			<div className="mt-6 flex flex-1 flex-col gap-5 overflow-hidden">
-				<RevealCode code={CODE} visible={step >= 1} label="WORKER" />
+				{/* Setup code: full block at step 1, collapses to compact strip at step 2 */}
+				{step >= 1 && (
+					<div className="relative">
+						{/* Full code block — visible at step 1, fades out at step 2 */}
+						<motion.div
+							initial={{ opacity: 0, y: 16 }}
+							animate={{
+								opacity: step < 2 ? 1 : 0,
+								y: step < 2 ? 0 : -8,
+								height: step < 2 ? 'auto' : 0,
+								overflow: 'hidden',
+							}}
+							transition={{ duration: 0.35, ease: [0.16, 0.77, 0.36, 0.98] }}
+						>
+							<RevealCode code={CODE} visible label="WORKER" />
+						</motion.div>
+
+						{/* Collapsed strip — slides in once demo is active */}
+						<motion.div
+							initial={false}
+							animate={{
+								opacity: step >= 2 ? 1 : 0,
+								height: step >= 2 ? 'auto' : 0,
+								overflow: 'hidden',
+							}}
+							transition={{ duration: 0.35, ease: [0.16, 0.77, 0.36, 0.98] }}
+						>
+							<div
+								className="
+									flex items-center gap-3 rounded-lg border border-cf-border bg-cf-bg-200
+									px-4 py-2.5
+								"
+							>
+								<Code className="size-4 shrink-0 text-cf-orange" strokeWidth={2} />
+								<code
+									className="truncate font-mono text-sm text-cf-text-muted"
+									dangerouslySetInnerHTML={{
+										__html: highlightCode('createOpencodeServer(sandbox) → sandbox.exposePort(port)'),
+									}}
+								/>
+								<span
+									className="
+										ml-auto shrink-0 rounded-md bg-cf-bg-300 px-2 py-0.5 font-sans text-xs
+										font-medium text-cf-text-subtle
+									"
+								>
+									WORKER
+								</span>
+							</div>
+						</motion.div>
+					</div>
+				)}
 
 				{step >= 2 && (
 					<Reveal visible={step >= 2} className="flex flex-1 flex-col gap-3 overflow-hidden">
