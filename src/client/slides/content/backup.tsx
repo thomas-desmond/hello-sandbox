@@ -1,6 +1,7 @@
 import { Camera, Trash2, RotateCcw, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+import { FileTree } from '@/components/file-tree';
 import { Output, Stdout, Stderr, Info, Dim } from '@/components/output';
 import { Spinner } from '@/components/spinner';
 import { api } from '@/lib/api';
@@ -38,6 +39,7 @@ export function BackupSlide({ step }: SlideProperties) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | undefined>();
 	const [activeStep, setActiveStep] = useState(-1);
+	const [refreshKey, setRefreshKey] = useState(0);
 
 	useEffect(() => {
 		api<BackupStatus>('/api/backup/status')
@@ -53,6 +55,7 @@ export function BackupSlide({ step }: SlideProperties) {
 			const data = await api<{ backup: BackupInfo }>('/api/backup/create', { dir: '/workspace' });
 			setBackup(data.backup);
 			setLines((p) => [...p, `$ sandbox.createBackup({ dir: "/workspace" })`, `Backup created: ${data.backup.id}`]);
+			setRefreshKey((k) => k + 1);
 		} catch (error_) {
 			setError(error_ instanceof Error ? error_.message : 'Failed');
 		} finally {
@@ -66,6 +69,7 @@ export function BackupSlide({ step }: SlideProperties) {
 		try {
 			await api<{ stdout: string }>('/api/exec', { command: "rm -rf /workspace/* /workspace/.* 2>/dev/null; echo 'All files deleted'" });
 			setLines((p) => [...p, '', '$ rm -rf /workspace/*', 'All files deleted from /workspace']);
+			setRefreshKey((k) => k + 1);
 		} catch (error_) {
 			setError(error_ instanceof Error ? error_.message : 'Failed');
 		} finally {
@@ -80,6 +84,7 @@ export function BackupSlide({ step }: SlideProperties) {
 		try {
 			await api<{ success: boolean }>('/api/backup/restore', { backup });
 			setLines((p) => [...p, '', '$ sandbox.restoreBackup(backup)', 'Backup restored successfully!']);
+			setRefreshKey((k) => k + 1);
 		} catch (error_) {
 			setError(error_ instanceof Error ? error_.message : 'Failed');
 		} finally {
@@ -93,7 +98,7 @@ export function BackupSlide({ step }: SlideProperties) {
 		<SlideLayout>
 			<SlideTitle number="09" title="Backup & Restore" subtitle="Create filesystem snapshots. Restore instantly." step={step} />
 
-			<div className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto">
+			<div className="mt-6 flex min-h-0 flex-1 flex-col gap-5">
 				{step >= 1 && (
 					<div className="flex items-center justify-center gap-6">
 						{WORKFLOW_STEPS.map((ws, index) => {
@@ -138,7 +143,7 @@ export function BackupSlide({ step }: SlideProperties) {
 				)}
 
 				{step >= 2 && (
-					<Reveal visible={step >= 2}>
+					<Reveal visible={step >= 2} className="flex min-h-0 flex-1 flex-col">
 						{!isAvailable && configStatus ? (
 							<div
 								className="
@@ -150,7 +155,7 @@ export function BackupSlide({ step }: SlideProperties) {
 								directory, <code className="text-cf-orange">restoreBackup()</code> restores it in-place.
 							</div>
 						) : (
-							<div className="flex flex-col gap-4">
+							<div className="flex min-h-0 flex-1 flex-col gap-4">
 								<div className="flex gap-3">
 									<button onClick={createBackup} disabled={loading || !!backup} className="btn-base btn-primary text-base">
 										{loading && activeStep === 0 ? 'Creating...' : backup ? 'Backup Created' : 'Create Backup'}
@@ -162,23 +167,26 @@ export function BackupSlide({ step }: SlideProperties) {
 										{loading && activeStep === 2 ? 'Restoring...' : 'Restore'}
 									</button>
 								</div>
-								<Output className="min-h-[80px] text-base/relaxed">
-									{loading && lines.length === 0 && <Dim>Running...</Dim>}
-									{lines.map((line, index) => (
-										<span key={index}>
-											{line.startsWith('$') ? (
-												<span className="text-surface-dark-success">{line}</span>
-											) : line.includes('successfully') || line.includes('restored') ? (
-												<Info>{line}</Info>
-											) : (
-												<Stdout>{line}</Stdout>
-											)}
-											{'\n'}
-										</span>
-									))}
-									{error && <Stderr>{error}</Stderr>}
-									{!loading && lines.length === 0 && !error && <Dim>Create a backup, delete files, then restore</Dim>}
-								</Output>
+								<div className="flex min-h-0 flex-1 gap-4">
+									<FileTree refreshKey={refreshKey} compact className="w-64 shrink-0" />
+									<Output className="min-h-0 flex-1 text-base/relaxed">
+										{loading && lines.length === 0 && <Dim>Running...</Dim>}
+										{lines.map((line, index) => (
+											<span key={index}>
+												{line.startsWith('$') ? (
+													<span className="text-surface-dark-success">{line}</span>
+												) : line.includes('successfully') || line.includes('restored') ? (
+													<Info>{line}</Info>
+												) : (
+													<Stdout>{line}</Stdout>
+												)}
+												{'\n'}
+											</span>
+										))}
+										{error && <Stderr>{error}</Stderr>}
+										{!loading && lines.length === 0 && !error && <Dim>Create a backup, delete files, then restore</Dim>}
+									</Output>
+								</div>
 							</div>
 						)}
 					</Reveal>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Badge } from '@/components/badge';
 import { Callout } from '@/components/callout';
 import { CodeBlock } from '@/components/code-block';
+import { FileTree } from '@/components/file-tree';
 import { Output, Stdout, Stderr, Info } from '@/components/output';
 import { Spinner } from '@/components/spinner';
 import { api } from '@/lib/api';
@@ -28,12 +29,6 @@ interface ExecResult {
 	stderr: string;
 	exitCode: number;
 	success: boolean;
-}
-
-interface ListResult {
-	files: Array<{ name: string; type: string }>;
-	count: number;
-	path: string;
 }
 
 interface BackupStatus {
@@ -104,10 +99,10 @@ export function BackupPanel() {
 	const [restoring, setRestoring] = useState(false);
 	const [output, setOutput] = useState<string[]>([]);
 	const [error, setError] = useState<{ title: string; detail: string } | undefined>();
-	const [verifyOutput, setVerifyOutput] = useState<string | undefined>();
-	const [verifyLoading, setVerifyLoading] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 	const [configStatus, setConfigStatus] = useState<BackupStatus | undefined>();
 	const [configLoading, setConfigLoading] = useState(true);
+	const [refreshKey, setRefreshKey] = useState(0);
 
 	// Check backup configuration on mount
 	useEffect(() => {
@@ -143,6 +138,7 @@ export function BackupPanel() {
 			});
 			setBackup(data.backup);
 			setOutput([`Backup created successfully`, `  ID: ${data.backup.id}`, `  Directory: ${data.backup.dir}`]);
+			setRefreshKey((k) => k + 1);
 		} catch (error_) {
 			const message = error_ instanceof Error ? error_.message : 'Failed to create backup';
 			setError(formatBackupError(message));
@@ -160,6 +156,7 @@ export function BackupPanel() {
 				backup,
 			});
 			setOutput((previous) => [...previous, '', `Backup restored successfully`, `  ID: ${data.id}`, `  Directory: ${data.dir}`]);
+			setRefreshKey((k) => k + 1);
 		} catch (error_) {
 			const message = error_ instanceof Error ? error_.message : 'Failed to restore backup';
 			setError(formatBackupError(message));
@@ -169,35 +166,19 @@ export function BackupPanel() {
 	}
 
 	async function deleteAllFiles() {
-		setVerifyLoading(true);
+		setDeleting(true);
+		setError(undefined);
 		try {
-			const data = await api<ExecResult>('/api/exec', {
+			await api<ExecResult>('/api/exec', {
 				command: "rm -rf /workspace/* /workspace/.* 2>/dev/null; echo 'All files deleted'",
 			});
-			setVerifyOutput(data.stdout || 'Files deleted');
+			setOutput((previous) => [...previous, '', 'All files deleted from /workspace']);
+			setRefreshKey((k) => k + 1);
 		} catch (error_) {
-			setVerifyOutput(`Error: ${error_ instanceof Error ? error_.message : 'Delete failed'}`);
+			const message = error_ instanceof Error ? error_.message : 'Delete failed';
+			setError(formatBackupError(message));
 		} finally {
-			setVerifyLoading(false);
-		}
-	}
-
-	async function listWorkspace() {
-		setVerifyLoading(true);
-		try {
-			const data = await api<ListResult>('/api/files/list', {
-				path: '/workspace',
-			});
-			if (data.files.length === 0) {
-				setVerifyOutput('/workspace is empty (0 files)');
-			} else {
-				const listing = data.files.map((f) => `  ${f.type === 'directory' ? '📁' : '📄'} ${f.name}`).join('\n');
-				setVerifyOutput(`/workspace contains ${data.count} item(s):\n${listing}`);
-			}
-		} catch (error_) {
-			setVerifyOutput(`Error: ${error_ instanceof Error ? error_.message : 'List failed'}`);
-		} finally {
-			setVerifyLoading(false);
+			setDeleting(false);
 		}
 	}
 
@@ -299,6 +280,10 @@ export function BackupPanel() {
 							{loading ? <Spinner className="size-4" /> : undefined}
 							Create Backup
 						</button>
+						<button onClick={deleteAllFiles} disabled={deleting || isNotConfigured} className="btn-base flex items-center gap-2 btn-ghost">
+							{deleting ? <Spinner className="size-4" /> : undefined}
+							Delete All
+						</button>
 						<button
 							onClick={restoreBackup}
 							disabled={restoring || !backup || isNotConfigured}
@@ -336,43 +321,8 @@ export function BackupPanel() {
 					</Output>
 				)}
 
-				{/* Demo workflow */}
-				{isReady && (
-					<div
-						className="
-							rounded-lg border border-dashed border-cf-border bg-cf-bg-200 p-4
-						"
-					>
-						<h3 className="mb-3 font-sans text-sm font-medium text-cf-text">Demo Workflow</h3>
-						<p className="mb-3 text-sm text-cf-text-muted">
-							Create a backup, delete all files, verify they are gone, then restore the backup to bring them back.
-						</p>
-						<div className="flex flex-wrap gap-2">
-							<button onClick={deleteAllFiles} disabled={verifyLoading} className="btn-preset">
-								Delete all files
-							</button>
-							<button onClick={listWorkspace} disabled={verifyLoading} className="btn-preset">
-								List /workspace
-							</button>
-						</div>
-						{verifyLoading && (
-							<div className="mt-3 flex items-center gap-2 text-xs text-cf-text-subtle">
-								<Spinner />
-								Running...
-							</div>
-						)}
-						{verifyOutput && (
-							<Output
-								className={`
-									mt-3 min-h-[60px]
-									${verifyLoading ? 'opacity-50' : ''}
-								`}
-							>
-								<Stdout>{verifyOutput}</Stdout>
-							</Output>
-						)}
-					</div>
-				)}
+				{/* File tree */}
+				{isReady && <FileTree refreshKey={refreshKey} className="max-h-[280px]" />}
 			</div>
 
 			<Callout>
