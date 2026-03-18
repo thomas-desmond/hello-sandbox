@@ -1,11 +1,9 @@
 import { Code } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect, useRef } from 'react';
 
-import { Badge } from '@/components/badge';
 import { BrowserFrame } from '@/components/browser-frame';
 import { Output, Stdout, Stderr, Dim } from '@/components/output';
-import { Spinner } from '@/components/spinner';
 import { api } from '@/lib/api';
 import { highlightCode } from '@/lib/highlight';
 
@@ -36,36 +34,38 @@ const FLOW_ITEMS = [
 
 /**
  * Slide 8: Preview URLs
- * Steps: 0=title+subtitle, 1=flow+code, 2=live demo
+ * Steps: 0=title+subtitle, 1=flow+code, 2=live demo (auto-starts)
  */
 export function PreviewSlide({ step }: SlideProperties) {
-	const [loading, setLoading] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string | undefined>();
 	const [lines, setLines] = useState<string[]>([]);
 	const [error, setError] = useState<string | undefined>();
-	async function startServer() {
-		setLoading(true);
-		setError(undefined);
-		setLines((p) => [...p, '$ Starting python3 -m http.server 8080...']);
-		try {
-			const data = await api<PreviewStartResult>('/api/preview/start', { command: 'python3 -m http.server 8080', port: 8080 });
-			setLines((p) => [...p, `Server started on port ${data.port}`, `Preview URL: ${data.url}`]);
-			setPreviewUrl(data.url);
-		} catch (error_) {
-			setError(error_ instanceof Error ? error_.message : 'Failed to start preview');
-		} finally {
-			setLoading(false);
-		}
-	}
+	const started = useRef(false);
+
+	useEffect(() => {
+		if (step < 2 || started.current) return;
+		started.current = true;
+		api<PreviewStartResult>('/api/preview/start', { command: 'python3 -m http.server 8080', port: 8080 })
+			.then((data) => {
+				setLines((p) => [...p, `Server started on port ${data.port}`, `Preview URL: ${data.url}`]);
+				setPreviewUrl(data.url);
+			})
+			.catch((error_) => {
+				setError(error_ instanceof Error ? error_.message : 'Failed to start preview');
+				started.current = false;
+			});
+	}, [step]);
+
+	const loading = step >= 2 && !previewUrl && !error;
 
 	return (
 		<SlideLayout>
 			<SlideTitle number="06" title="Preview URLs" subtitle="Start a server. Expose a port. Get a public URL. Instantly." step={step} />
 
-			<div className="mt-6 flex flex-1 flex-col gap-5 overflow-y-auto">
+			<div className="mt-6 flex min-h-0 flex-1 flex-col gap-5">
 				{/* Flow + code: full block at step 1, collapses to compact strip at step 2 */}
 				{step >= 1 && (
-					<div className="relative">
+					<div className="relative shrink-0">
 						{/* Full block — visible at step 1, fades out at step 2 */}
 						<motion.div
 							initial={{ opacity: 0, y: 16 }}
@@ -140,52 +140,66 @@ export function PreviewSlide({ step }: SlideProperties) {
 				)}
 
 				{step >= 2 && (
-					<Reveal visible={step >= 2}>
-						<div className="flex flex-col gap-4">
-							<button onClick={startServer} disabled={loading || !!previewUrl} className="btn-base w-fit btn-primary text-base">
-								{loading ? (
-									<>
-										<Spinner className="size-4" /> Starting...
-									</>
-								) : previewUrl ? (
-									'Server Running'
-								) : (
-									'Start Server & Expose'
+					<Reveal visible={step >= 2} className="flex min-h-0 flex-1 flex-col gap-4">
+						<BrowserFrame url={previewUrl} className="relative" containerClassName="min-h-0 flex-1">
+							<AnimatePresence>
+								{!previewUrl && (
+									<motion.div
+										className="
+											absolute inset-0 z-10 flex items-center justify-center
+											bg-surface-dark/90 backdrop-blur-sm
+										"
+										initial={{ opacity: 1 }}
+										exit={{ opacity: 0 }}
+										transition={{ duration: 0.5 }}
+									>
+										<div className="flex flex-col items-center gap-3">
+											<div className="flex h-6 items-end gap-[3px]">
+												{[0, 1, 2, 3, 4].map((index) => (
+													<motion.div
+														key={index}
+														className="w-[3px] rounded-full bg-cf-orange"
+														animate={{
+															height: [8 + index * 3, 16 + index * 2, 8 + index * 3],
+															opacity: [0.3, 1, 0.3],
+														}}
+														transition={{ duration: 1, repeat: Infinity, delay: index * 0.12, ease: 'easeInOut' }}
+														style={{ height: 8 + index * 3 }}
+													/>
+												))}
+											</div>
+											<span className="text-base text-surface-dark-text/80">Starting server...</span>
+										</div>
+									</motion.div>
 								)}
-							</button>
-
-							<Output className="min-h-[60px] text-base/relaxed">
-								{loading && lines.length === 0 && <Dim>Starting server...</Dim>}
-								{lines.map((line, index) => (
-									<span key={index}>
-										{line.startsWith('$') ? (
-											<span className="text-surface-dark-success">{line}</span>
-										) : line.startsWith('Preview URL:') ? (
-											<span className="text-surface-dark-info">{line}</span>
-										) : (
-											<Stdout>{line}</Stdout>
-										)}
-										{'\n'}
-									</span>
-								))}
-								{error && <Stderr>{error}</Stderr>}
-								{!loading && lines.length === 0 && !error && <Dim>Click to start a server and expose it</Dim>}
-							</Output>
-
+							</AnimatePresence>
 							{previewUrl && (
-								<div className="flex flex-col gap-2">
-									<Badge variant="success">Live Preview</Badge>
-									<BrowserFrame url={previewUrl} containerClassName="min-h-0 flex-1">
-										<iframe
-											src={previewUrl}
-											title="Sandbox preview"
-											className="min-h-[280px] w-full flex-1 border-0"
-											sandbox="allow-scripts allow-same-origin allow-forms"
-										/>
-									</BrowserFrame>
-								</div>
+								<iframe
+									src={previewUrl}
+									title="Sandbox preview"
+									className="w-full flex-1 border-0"
+									sandbox="allow-scripts allow-same-origin allow-forms"
+								/>
 							)}
-						</div>
+						</BrowserFrame>
+
+						<Output className="shrink-0 text-base/relaxed">
+							{loading && lines.length === 0 && <Dim>Starting server...</Dim>}
+							{lines.map((line, index) => (
+								<span key={index}>
+									{line.startsWith('$') ? (
+										<span className="text-surface-dark-success">{line}</span>
+									) : line.startsWith('Preview URL:') ? (
+										<span className="text-surface-dark-info">{line}</span>
+									) : (
+										<Stdout>{line}</Stdout>
+									)}
+									{'\n'}
+								</span>
+							))}
+							{error && <Stderr>{error}</Stderr>}
+							{!loading && lines.length === 0 && !error && <Dim>Starting server...</Dim>}
+						</Output>
 					</Reveal>
 				)}
 			</div>
