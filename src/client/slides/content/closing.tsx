@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
+import { QRCodeSVG } from 'qrcode.react';
 
 import { Reveal } from '../components/reveal';
 
@@ -15,12 +16,15 @@ const LINKS = [
 
 /**
  * Slide 12: Closing / CTA
- * Steps: 0=logo+title+npm, 1=links
+ * Steps: 0=logo+title+npm, 1=links, 2=QR code
  *
  * Links row always rendered (occupying space) but invisible until step 1 -- no layout shift.
+ * QR code appears on step 2, pointing to the current host so audience can try the demo.
  */
 export function ClosingSlide({ step }: SlideProperties) {
 	const showLinks = step >= 1;
+	const showQR = step >= 2;
+	const currentHost = globalThis.window === undefined ? '' : globalThis.location.origin;
 
 	return (
 		<div
@@ -99,9 +103,29 @@ export function ClosingSlide({ step }: SlideProperties) {
 						</Reveal>
 					))}
 				</motion.div>
+
+				{/* QR code to try the demo -- always rendered for layout, revealed at step 2 */}
+				<motion.div
+					className="flex flex-col items-center gap-4"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: showQR ? 1 : 0 }}
+					transition={{ duration: 0.45, ease: EASE }}
+					aria-hidden={!showQR}
+					style={{ pointerEvents: showQR ? 'auto' : 'none' }}
+				>
+					<Reveal visible={showQR} direction="up">
+						<div className="flex flex-col items-center gap-4">
+							<div className="rounded-2xl border border-cf-border p-5" style={{ backgroundColor: '#fff' }}>
+								<QRCodeSVG value={currentHost} size={200} level="M" />
+							</div>
+							<p className="text-lg text-cf-text-muted">Scan to try it yourself</p>
+							<p className="font-mono text-base text-cf-text-subtle">{currentHost}</p>
+						</div>
+					</Reveal>
+				</motion.div>
 			</div>
 		</div>
 	);
 }
 
-ClosingSlide.steps = 2;
+ClosingSlide.steps = 3;

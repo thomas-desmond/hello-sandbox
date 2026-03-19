@@ -42,9 +42,9 @@ export function FilesPanel() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | undefined>();
 
-	const [mkdirPath, setMkdirPath] = useState('');
-	const [writePath, setWritePath] = useState('');
-	const [writeContent, setWriteContent] = useState('');
+	const [mkdirPath, setMkdirPath] = useState('/workspace/new-dir');
+	const [writePath, setWritePath] = useState('/workspace/hello.txt');
+	const [writeContent, setWriteContent] = useState('Hello from the Sandbox SDK!');
 	const [actionOutput, setActionOutput] = useState<string | undefined>();
 
 	async function listDirectory(path: string) {
