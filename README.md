@@ -1,22 +1,17 @@
 # Hello Sandbox
 
-An interactive demo application for the [Cloudflare Sandbox SDK](https://developers.cloudflare.com/sandbox/). It provides a polished web UI that showcases isolated code execution containers running on Cloudflare's edge network.
+Interactive demo app for the [Cloudflare Sandbox SDK](https://developers.cloudflare.com/sandbox/).
 
-## Features
-
-The app includes 9 panels, each demonstrating a different Sandbox SDK capability:
-
-- **Execute** -- Run shell commands and view stdout/stderr/exit codes
-- **Files** -- Full filesystem CRUD (write, read, mkdir, list, delete, exists)
-- **Code** -- Stateful Python and JavaScript REPL with variable persistence across calls
-- **AI Exec** -- Natural language to code: an LLM generates Python and executes it in the sandbox
-- **Terminal** -- Interactive terminal session via xterm.js over WebSocket
-- **Preview** -- Start HTTP servers inside the container and expose them via public preview URLs
-- **Watch** -- Live filesystem change stream via Server-Sent Events
-- **OpenCode** -- Embedded AI coding agent ([OpenCode](https://opencode.ai)) running in a dedicated sandbox container
-- **Backup** -- Create and restore R2-backed squashfs snapshots of the sandbox filesystem
-
-A **slides mode** (`?mode=slides`) is also included for presenting the SDK's capabilities.
+- Run shell commands and view stdout/stderr/exit codes
+- Filesystem CRUD (write, read, mkdir, list, delete, exists)
+- Stateful Python and JavaScript REPL with variable persistence
+- Natural language to code: an LLM generates Python and executes it in the sandbox
+- Interactive terminal session via xterm.js over WebSocket
+- Start HTTP servers inside the container and expose them via preview URLs
+- Live filesystem change stream via Server-Sent Events
+- Embedded [OpenCode](https://opencode.ai) agent running in a dedicated sandbox
+- Create and restore R2-backed squashfs snapshots
+- Slides mode (`?mode=slides`) for presenting
 
 ## Tech Stack
 
@@ -35,45 +30,19 @@ A **slides mode** (`?mode=slides`) is also included for presenting the SDK's cap
 
 ## Getting Started
 
-### Prerequisites
-
-- [Bun](https://bun.sh/)
-- [Docker](https://www.docker.com/) (for local sandbox containers)
-
-### Install
+You need [Bun](https://bun.sh/) and [Docker](https://www.docker.com/) (for local sandbox containers).
 
 ```bash
 bun install
-```
-
-### Develop
-
-```bash
 bun run dev
 ```
 
-The first run builds the Docker container (~2-3 minutes). The app is served at `http://localhost:8787`.
-
-### Type Check
-
 ```bash
-bun run typecheck
+bun run typecheck       # type check
+bun run lint            # lint
+bun run format          # format
+bun run deploy          # deploy to Cloudflare
 ```
-
-### Lint and Format
-
-```bash
-bun run lint      # check
-bun run format    # fix
-```
-
-### Deploy
-
-```bash
-bun run deploy
-```
-
-After first deployment, wait 2-3 minutes for container provisioning before making requests.
 
 ## Project Structure
 
@@ -100,24 +69,18 @@ src/
 
 ## Configuration
 
-Cloudflare bindings are defined in `wrangler.jsonc`:
+Cloudflare bindings in `wrangler.jsonc`:
 
-| Binding           | Type           | Purpose                                                                 |
-| ----------------- | -------------- | ----------------------------------------------------------------------- |
-| `AI`              | Workers AI     | LLM inference for AI Exec panel                                         |
-| `ASSETS`          | Static Assets  | SPA asset serving                                                       |
-| `BACKUP_BUCKET`   | R2 Bucket      | Snapshot storage for backup/restore                                     |
-| `Sandbox`         | Durable Object | Main demo sandbox (`cloudflare/sandbox:0.7.17-python`)                  |
-| `OpencodeSandbox` | Durable Object | Dedicated OpenCode agent sandbox (`cloudflare/sandbox:0.7.17-opencode`) |
+- `AI` (Workers AI) - LLM inference for the AI Exec panel
+- `ASSETS` (Static Assets) - SPA asset serving
+- `BACKUP_BUCKET` (R2 Bucket) - snapshot storage for backup/restore
+- `Sandbox` (Durable Object) - main demo sandbox
+- `OpencodeSandbox` (Durable Object) - dedicated OpenCode agent sandbox
 
-After changing bindings, regenerate types:
-
-```bash
-bun run cf-typegen
-```
+Run `bun run cf-typegen` after changing bindings.
 
 ## Resources
 
-- [Sandbox SDK Documentation](https://developers.cloudflare.com/sandbox/)
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+- [Sandbox SDK docs](https://developers.cloudflare.com/sandbox/)
+- [Workers docs](https://developers.cloudflare.com/workers/)
 - [OpenCode](https://opencode.ai/)

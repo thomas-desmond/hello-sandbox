@@ -1,4 +1,18 @@
-import { Play, FolderOpen, Code, Sparkles, TerminalSquare, Globe, Eye, MonitorCog, Archive, Presentation } from 'lucide-react';
+import {
+	Play,
+	FolderOpen,
+	Code,
+	Sparkles,
+	TerminalSquare,
+	Globe,
+	Eye,
+	MonitorCog,
+	Archive,
+	Presentation,
+	Github,
+	Menu,
+	X,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 
@@ -63,6 +77,7 @@ export function App() {
 
 function Explorer() {
 	const [activePanel, setActivePanel] = useState(getInitialPanel);
+	const [sidebarOpen, setSidebarOpen] = useState(false);
 	const sandboxId = useSandboxId();
 
 	useEffect(() => {
@@ -77,6 +92,7 @@ function Explorer() {
 	const navigate = useCallback((id: string) => {
 		setActivePanel(id);
 		globalThis.location.hash = id;
+		setSidebarOpen(false);
 	}, []);
 
 	const ActiveComponent = PANELS.find((p) => p.id === activePanel)?.component;
@@ -84,16 +100,36 @@ function Explorer() {
 	return (
 		<div
 			className="
-				grid h-screen w-screen grid-cols-[240px_1fr] grid-rows-[1fr_40px]
-				overflow-hidden
+				grid h-screen w-screen grid-cols-[1fr] grid-rows-[1fr_40px] overflow-hidden
+				md:grid-cols-[240px_1fr]
 			"
 		>
+			{/* Mobile sidebar backdrop */}
+			<AnimatePresence>
+				{sidebarOpen && (
+					<motion.div
+						className="
+							fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]
+							md:hidden
+						"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+						onClick={() => setSidebarOpen(false)}
+					/>
+				)}
+			</AnimatePresence>
+
 			{/* Sidebar */}
 			<aside
-				className="
-					row-span-1 flex flex-col overflow-hidden border-r border-cf-border
-					bg-cf-bg-100
-				"
+				className={`
+					fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col overflow-hidden
+					border-r border-cf-border bg-cf-bg-100 transition-transform duration-200
+					ease-out
+					md:static md:z-auto md:row-span-1 md:translate-x-0 md:transition-none
+					${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+				`}
 			>
 				<div className="flex items-center gap-3 border-b border-cf-border px-5 py-4">
 					<svg viewBox="0 0 66 30" fill="currentColor" className="h-3.5 w-auto shrink-0 text-cf-orange">
@@ -148,8 +184,27 @@ function Explorer() {
 
 			{/* Main content */}
 			<main className="relative overflow-hidden bg-cf-bg-100">
+				{/* Mobile hamburger */}
+				<button
+					onClick={() => setSidebarOpen((o: boolean) => !o)}
+					className="
+						absolute top-3 left-3 z-30 flex size-9 items-center justify-center
+						rounded-md border border-cf-border bg-cf-bg-200 text-cf-text-muted
+						transition-colors
+						hover:border-cf-orange hover:text-cf-orange
+						md:hidden
+					"
+					title="Toggle sidebar"
+				>
+					{sidebarOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+				</button>
 				<div className="pointer-events-none absolute inset-0 dot-pattern opacity-45" />
-				<div className="absolute inset-0 overflow-x-hidden overflow-y-auto px-9 pt-9">
+				<div
+					className="
+						absolute inset-0 overflow-x-hidden overflow-y-auto px-4 pt-14
+						md:px-9 md:pt-9
+					"
+				>
 					<AnimatePresence mode="wait">
 						{ActiveComponent && (
 							<motion.div
@@ -175,8 +230,9 @@ function Explorer() {
 			{/* Status bar */}
 			<footer
 				className="
-					col-span-2 flex items-center justify-between border-t border-cf-border
+					col-span-1 flex items-center justify-between border-t border-cf-border
 					bg-cf-bg-200 px-5 font-mono text-xs text-cf-text-subtle
+					md:col-span-2
 				"
 			>
 				<div className="flex items-center gap-2.5">
@@ -191,10 +247,23 @@ function Explorer() {
 						}}
 						transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
 					/>
-					sandbox ready
+					<span title={sandboxId ?? 'connecting...'}>sandbox ready</span>
 				</div>
+
 				<div className="flex items-center gap-3">
-					<span className="text-cf-orange/70">{sandboxId ?? 'connecting...'}</span>
+					<a
+						href="https://github.com/TimoWilhelm/hello-sandbox"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="
+							flex items-center gap-1.5 rounded-md border border-cf-border px-2 py-0.5
+							font-sans text-[11px] font-medium text-cf-text-subtle transition-colors
+							hover:border-cf-orange hover:text-cf-orange
+						"
+						title="View on GitHub"
+					>
+						<Github className="size-3" />
+					</a>
 					<button
 						onClick={() => {
 							const url = new URL(globalThis.location.href);
@@ -203,9 +272,11 @@ function Explorer() {
 							globalThis.location.href = url.toString();
 						}}
 						className="
-							flex items-center gap-1.5 rounded-md border border-cf-border px-2 py-0.5
-							font-sans text-[11px] font-medium text-cf-text-subtle transition-colors
+							hidden cursor-pointer items-center gap-1.5 rounded-md border
+							border-cf-border px-2 py-0.5 font-sans text-[11px] font-medium
+							text-cf-text-subtle transition-colors
 							hover:border-cf-orange hover:text-cf-orange
+							md:flex
 						"
 						title="Enter presentation mode"
 					>
