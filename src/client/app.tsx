@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect, useCallback, type ReactNode, type ComponentType } from 'react';
 
 import { ErrorBoundary } from './components/error-boundary';
+import { ReconnectModal } from './components/reconnect-modal';
 import { useSandboxId } from './lib/use-sandbox-id';
 import { AIPanel } from './panels/ai';
 import { BackupPanel } from './panels/backup';
@@ -78,6 +79,7 @@ export function App() {
 function Explorer() {
 	const [activePanel, setActivePanel] = useState(getInitialPanel);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [reconnectOpen, setReconnectOpen] = useState(false);
 	const sandboxId = useSandboxId();
 
 	useEffect(() => {
@@ -235,7 +237,14 @@ function Explorer() {
 					md:col-span-2
 				"
 			>
-				<div className="flex items-center gap-2.5">
+				<button
+					onClick={() => setReconnectOpen(true)}
+					className="
+						flex items-center gap-2.5 rounded-md px-1 py-0.5 transition-colors
+						hover:text-cf-text
+					"
+					title={sandboxId ?? 'connecting...'}
+				>
 					<motion.span
 						className="size-1.5 rounded-full bg-cf-success"
 						animate={{
@@ -247,8 +256,8 @@ function Explorer() {
 						}}
 						transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
 					/>
-					<span title={sandboxId ?? 'connecting...'}>sandbox ready</span>
-				</div>
+					sandbox ready
+				</button>
 
 				<div className="flex items-center gap-3">
 					<a
@@ -285,6 +294,7 @@ function Explorer() {
 					</button>
 				</div>
 			</footer>
+			<ReconnectModal open={reconnectOpen} sandboxId={sandboxId} onClose={() => setReconnectOpen(false)} />
 		</div>
 	);
 }

@@ -2,6 +2,7 @@
  * Central API router — mounts all sub-routers under /api
  */
 import { Hono } from 'hono';
+import { deleteCookie } from 'hono/cookie';
 import { cors } from 'hono/cors';
 
 import ai from './ai';
@@ -33,5 +34,11 @@ api.get('/status', (c) =>
 		features: ['exec', 'files', 'code-interpreter', 'ai', 'terminal', 'preview', 'watch', 'backup'],
 	}),
 );
+
+// Session reset — clears the sandbox_id cookie so the next request gets a fresh sandbox
+api.delete('/session', (c) => {
+	deleteCookie(c, 'sandbox_id', { path: '/' });
+	return c.json({ ok: true });
+});
 
 export default api;
