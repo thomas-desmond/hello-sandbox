@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import { sandbox } from './sandbox';
 
-const MODEL = '@cf/openai/gpt-oss-120b' as const;
+const MODEL = '@cf/google/gemma-4-26b-a4b-it' as const;
 
 const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 

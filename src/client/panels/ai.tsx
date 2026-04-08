@@ -21,7 +21,7 @@ interface AIResult {
 
 const SDK_CODE = `const workersai = createWorkersAI({ binding: env.AI });
 const result = await generateText({
-  model: workersai('@cf/openai/gpt-oss-120b'),
+  model: workersai('@cf/google/gemma-4-26b-a4b-it'),
   tools: { execute_python: tool({ ... }) },
   stopWhen: stepCountIs(5),
 });`;
