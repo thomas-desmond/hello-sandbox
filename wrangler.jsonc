@@ -27,14 +27,14 @@
 		{
 			"class_name": "Sandbox",
 			"image": "./Dockerfile",
-			"instance_type": "lite",
+			"instance_type": "basic",
 			"max_instances": 100,
 		},
 		{
 			"class_name": "OpencodeSandbox",
 			"image": "./Dockerfile.opencode",
 			"instance_type": "basic",
-			"max_instances": 1,
+			"max_instances": 100,
 		},
 	],
 	"durable_objects": {

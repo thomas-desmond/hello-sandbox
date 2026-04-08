@@ -1,3 +1,3 @@
-FROM docker.io/cloudflare/sandbox:0.7.17-opencode
+FROM docker.io/cloudflare/sandbox:0.8.6-opencode
 
 EXPOSE 8080

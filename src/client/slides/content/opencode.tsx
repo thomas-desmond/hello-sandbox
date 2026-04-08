@@ -11,7 +11,7 @@ import { SlideTitle } from '../components/slide-title';
 import type { SlideProperties } from '../types';
 
 const CODE = `// Uses the official -opencode base image
-// FROM cloudflare/sandbox:0.7.17-opencode
+// FROM cloudflare/sandbox:0.8.6-opencode
 
 const sandbox = getSandbox(env.OpencodeSandbox, "opencode");
 const server = await createOpencodeServer(sandbox, {

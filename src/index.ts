@@ -66,7 +66,8 @@ app.get('/ws/terminal', async (c) => {
 app.get('/api/opencode/start', async (c) => {
 	// Use .host (includes port) so the SDK constructs correct local dev URLs
 	const hostname = new URL(c.req.url).host;
-	const sandbox = getSandbox(c.env.OpencodeSandbox, 'opencode');
+	const sandboxId = c.get('sandboxId');
+	const sandbox = getSandbox(c.env.OpencodeSandbox, `opencode-${sandboxId}`);
 
 	// Clone the agents repo into the working directory if it doesn't exist yet
 	const { exists } = await sandbox.exists('/home/user/agents');
