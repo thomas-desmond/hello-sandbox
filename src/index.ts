@@ -37,9 +37,9 @@ app.use('*', async (c, next) => {
 app.use('*', async (c, next) => {
 	const host = new URL(c.req.url).hostname;
 
-	// OpenCode preview URLs contain the sandbox ID "opencode" in the subdomain.
+	// OpenCode preview URLs contain the sandbox ID prefix "oc-" in the subdomain.
 	// Pass only the OpencodeSandbox binding so proxyToSandbox routes to the right DO.
-	if (host.includes('-opencode-')) {
+	if (host.includes('-oc-')) {
 		const response = await proxyToSandbox(c.req.raw, { Sandbox: c.env.OpencodeSandbox });
 		if (response) return response;
 	}
@@ -67,7 +67,7 @@ app.get('/api/opencode/start', async (c) => {
 	// Use .host (includes port) so the SDK constructs correct local dev URLs
 	const hostname = new URL(c.req.url).host;
 	const sandboxId = c.get('sandboxId');
-	const sandbox = getSandbox(c.env.OpencodeSandbox, `opencode-${sandboxId}`);
+	const sandbox = getSandbox(c.env.OpencodeSandbox, `oc-${sandboxId.slice(0, 8)}`);
 
 	// Clone the agents repo into the working directory if it doesn't exist yet
 	const { exists } = await sandbox.exists('/home/user/agents');
