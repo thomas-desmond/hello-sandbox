@@ -1,13 +1,25 @@
-import { getSandbox, proxyToSandbox } from '@cloudflare/sandbox';
+import { Sandbox as BaseSandbox, getSandbox, proxyToSandbox } from '@cloudflare/sandbox';
 import { createOpencodeServer } from '@cloudflare/sandbox/opencode';
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 
 import api from './api';
 
-// Required: re-export Sandbox classes for Durable Object bindings
-export { Sandbox } from '@cloudflare/sandbox';
-export { Sandbox as OpencodeSandbox } from '@cloudflare/sandbox';
+// Required: re-export ContainerProxy for outbound interception to work
+
+// Extend Sandbox with outbound Workers to demo zero-trust credential injection.
+// Requests to httpbin.org are intercepted and auth headers are injected transparently —
+// the sandbox code never sees the credentials.
+export class Sandbox extends BaseSandbox {}
+
+Sandbox.outboundByHost = {
+	'httpbin.org': (request) => {
+		const requestWithAuth = new Request(request);
+		requestWithAuth.headers.set('Authorization', 'Bearer sb_demo_secret_token_12345');
+		requestWithAuth.headers.set('X-Sandbox-Auth', 'injected-by-outbound-worker');
+		return fetch(requestWithAuth);
+	},
+};
 
 const COOKIE_NAME = 'sandbox_id';
 
@@ -100,3 +112,5 @@ app.all('*', async (c) => {
 });
 
 export default app;
+
+export { ContainerProxy, Sandbox as OpencodeSandbox } from '@cloudflare/sandbox';
