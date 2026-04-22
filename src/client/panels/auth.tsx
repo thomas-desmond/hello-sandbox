@@ -17,7 +17,9 @@ interface AuthResult {
 const SDK_CODE = `import { Sandbox, ContainerProxy } from '@cloudflare/sandbox';
 export { ContainerProxy };
 
-export class MySandbox extends Sandbox {}
+export class MySandbox extends Sandbox {
+  interceptHttps = true;
+}
 
 MySandbox.outboundByHost = {
   "httpbin.org": (request, env, ctx) => {

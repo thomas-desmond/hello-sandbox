@@ -10,10 +10,12 @@ import api from './api';
 // Extend Sandbox with outbound Workers to demo zero-trust credential injection.
 // Requests to httpbin.org are intercepted and auth headers are injected transparently —
 // the sandbox code never sees the credentials.
-export class Sandbox extends BaseSandbox {}
+export class Sandbox extends BaseSandbox {
+	interceptHttps = true;
+}
 
 Sandbox.outboundByHost = {
-	'httpbin.org': (request) => {
+	'httpbin.org': (request: Request) => {
 		const requestWithAuth = new Request(request);
 		requestWithAuth.headers.set('Authorization', 'Bearer sb_demo_secret_token_12345');
 		requestWithAuth.headers.set('X-Sandbox-Auth', 'injected-by-outbound-worker');

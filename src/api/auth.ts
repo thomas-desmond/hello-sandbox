@@ -13,8 +13,19 @@ app.post('/request', async (c) => {
 	const sb = sandbox(c);
 	const result = await sb.exec('curl -s https://httpbin.org/headers');
 
+	if (!result.success || !result.stdout.trim()) {
+		console.error('auth request failed', {
+			exitCode: result.exitCode,
+			stdout: result.stdout,
+			stderr: result.stderr,
+			duration: result.duration,
+		});
+		return c.json({ error: 'Request failed', exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr }, 500);
+	}
+
 	const parsed = httpbinSchema.safeParse(JSON.parse(result.stdout));
 	if (!parsed.success) {
+		console.error('auth response parse failed', { stdout: result.stdout, stderr: result.stderr });
 		return c.json({ error: 'Failed to parse response', stdout: result.stdout, stderr: result.stderr }, 500);
 	}
 
