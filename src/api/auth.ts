@@ -11,7 +11,7 @@ const app = new Hono<{ Bindings: Env; Variables: { sandboxId: string } }>();
 
 app.post('/request', async (c) => {
 	const sb = sandbox(c);
-	const result = await sb.exec('curl -s https://httpbin.org/headers');
+	const result = await sb.exec('curl https://httpbin.org/headers');
 
 	if (!result.success || !result.stdout.trim()) {
 		console.error('auth request failed', {

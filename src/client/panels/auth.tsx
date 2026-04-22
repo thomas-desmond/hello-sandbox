@@ -30,7 +30,7 @@ MySandbox.outboundByHost = {
   },
 };`;
 
-const COMMAND = 'curl -s https://httpbin.org/headers';
+const COMMAND = 'curl https://httpbin.org/headers';
 
 // Headers that are injected by the outbound Worker
 const INJECTED_HEADERS = new Set(['Authorization', 'X-Sandbox-Auth']);
@@ -193,7 +193,8 @@ export function AuthPanel() {
 				The sandbox ran <span className="font-medium">curl</span> with no authentication headers. The{' '}
 				<span className="font-medium">outbound Worker</span> intercepted the request to httpbin.org and injected{' '}
 				<span className="font-medium">Authorization</span> and <span className="font-medium">X-Sandbox-Auth</span> headers before forwarding
-				it. The sandbox never had access to the credentials — this is zero-trust credential injection.
+				it. The sandbox never had access to the credentials — this is zero-trust credential injection. httpbin.org is a public HTTP
+				inspection service that echoes back the headers it receives, making it easy to verify the injection worked.
 			</Callout>
 		</section>
 	);

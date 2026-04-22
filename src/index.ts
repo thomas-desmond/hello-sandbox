@@ -5,11 +5,6 @@ import { getCookie, setCookie } from 'hono/cookie';
 
 import api from './api';
 
-// Required: re-export ContainerProxy for outbound interception to work
-
-// Extend Sandbox with outbound Workers to demo zero-trust credential injection.
-// Requests to httpbin.org are intercepted and auth headers are injected transparently —
-// the sandbox code never sees the credentials.
 export class Sandbox extends BaseSandbox {
 	interceptHttps = true;
 }
