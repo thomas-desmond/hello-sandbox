@@ -1,14 +1,14 @@
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/badge';
 import { Output, Stderr, Dim } from '@/components/output';
 import { api } from '@/lib/api';
 
+import { CollapsibleCodeContext } from '../components/collapsible-code-context';
 import { Reveal } from '../components/reveal';
 import { SlideLayout } from '../components/slide-layout';
 import { SlideTitle } from '../components/slide-title';
-import { RevealCode } from '../components/typewriter-code';
 
 import type { SlideProperties } from '../types';
 
@@ -110,7 +110,14 @@ export function AuthSlide({ step }: SlideProperties) {
 			<SlideTitle number="10" title="Outbound Auth" subtitle="Intercept outgoing requests. Inject credentials transparently." step={step} />
 
 			<div className="mt-8 flex flex-1 flex-col gap-6">
-				<RevealCode code={CODE} visible={step >= 1} label="OUTBOUND WORKER" />
+				{step >= 1 && (
+					<CollapsibleCodeContext
+						step={step}
+						code={CODE}
+						label="OUTBOUND WORKER"
+						summary='MySandbox.outboundByHost = { "httpbin.org": (req, env) => fetch(withAuth(req)) }'
+					/>
+				)}
 
 				<Reveal visible={step >= 2} direction="up">
 					<div className="flex flex-col gap-3">
@@ -124,78 +131,38 @@ export function AuthSlide({ step }: SlideProperties) {
 							</button>
 						</div>
 
-						<AnimatePresence mode="wait">
-							{loading && (
-								<motion.div
-									key="loading"
-									initial={{ opacity: 0, y: 8 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: -4 }}
-									transition={{ duration: 0.25 }}
-								>
-									<Output className="min-h-[100px] text-base/relaxed">
-										<Dim>
-											<motion.span
-												animate={{ opacity: [0.4, 0.8, 0.4] }}
-												transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-											>
-												Running curl inside sandbox...
-											</motion.span>
-										</Dim>
-									</Output>
-								</motion.div>
+						<div className="flex min-h-7 items-center gap-3">
+							{result && !loading ? (
+								<>
+									<Badge variant={result.success ? 'success' : 'error'}>exit {result.exitCode}</Badge>
+									<span className="font-mono text-base text-cf-text-subtle">{result.duration}ms</span>
+								</>
+							) : loading ? (
+								<span className="font-mono text-sm text-cf-text-subtle">Request in progress...</span>
+							) : error ? (
+								<Badge variant="error">request failed</Badge>
+							) : (
+								<span className="font-mono text-sm text-transparent select-none">placeholder</span>
 							)}
+						</div>
 
-							{result && !loading && (
-								<motion.div
-									key="result"
-									className="flex flex-col gap-3"
-									initial={{ opacity: 0, y: 16 }}
-									animate={{ opacity: 1, y: 0 }}
-									exit={{ opacity: 0, y: -8 }}
-									transition={{ duration: 0.4, ease: EASE }}
-								>
-									<div className="flex items-center gap-3">
-										<Badge variant={result.success ? 'success' : 'error'}>exit {result.exitCode}</Badge>
-										<span className="font-mono text-base text-cf-text-subtle">{result.duration}ms</span>
-									</div>
-
-									<Output className="min-h-[100px] text-base/relaxed">
-										{sortedHeaders.map(([name, value], index) => (
-											<HeaderLine key={name} name={name} value={value} injected={INJECTED_HEADERS.has(name)} delay={index * 0.05} />
-										))}
-									</Output>
-								</motion.div>
+						<Output className="min-h-[140px] text-base/relaxed">
+							{loading ? (
+								<Dim>
+									<motion.span animate={{ opacity: [0.45, 0.8, 0.45] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
+										Running curl inside sandbox...
+									</motion.span>
+								</Dim>
+							) : result ? (
+								sortedHeaders.map(([name, value], index) => (
+									<HeaderLine key={name} name={name} value={value} injected={INJECTED_HEADERS.has(name)} delay={index * 0.05} />
+								))
+							) : error ? (
+								<Stderr>{error}</Stderr>
+							) : (
+								<Dim>Make a request to see injected headers</Dim>
 							)}
-
-							{error && !loading && (
-								<motion.div
-									key="error"
-									initial={{ opacity: 0, scale: 0.96 }}
-									animate={{ opacity: 1, scale: 1 }}
-									exit={{ opacity: 0, scale: 0.96 }}
-									transition={{ duration: 0.25 }}
-								>
-									<Output className="min-h-[100px] text-base/relaxed">
-										<Stderr>{error}</Stderr>
-									</Output>
-								</motion.div>
-							)}
-
-							{!loading && !result && !error && (
-								<motion.div
-									key="empty"
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									exit={{ opacity: 0 }}
-									transition={{ duration: 0.2 }}
-								>
-									<Output className="min-h-[100px] text-base/relaxed">
-										<Dim>Make a request to see injected headers</Dim>
-									</Output>
-								</motion.div>
-							)}
-						</AnimatePresence>
+						</Output>
 					</div>
 				</Reveal>
 			</div>
